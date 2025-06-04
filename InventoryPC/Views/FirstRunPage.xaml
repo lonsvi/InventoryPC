@@ -4,55 +4,165 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:InventoryPC.ViewModels"
+      xmlns:local="clr-namespace:InventoryPC.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="1000"
       Background="#1E1E1E">
     <Page.DataContext>
         <vm:FirstRunViewModel/>
     </Page.DataContext>
+    <Page.Resources>
+        <Style x:Key="LoadingSpinnerStyle" TargetType="ProgressBar">
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <!-- Фоновое кольцо -->
+                           
+                            <!-- Короткая дуга ("маленькая штучка") -->
+                            <Path x:Name="ShortArc"
+                                  Stroke="#4F8EF7" StrokeThickness="4"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  VerticalAlignment="Center" HorizontalAlignment="Center"
+                                  RenderTransformOrigin="0.5,0.5"
+                                  Opacity="1">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                                <Path.Data>
+                                    <PathGeometry>
+                                        <PathFigure StartPoint="25,5">
+                                            <ArcSegment Size="20,20"
+                                                        IsLargeArc="False"
+                                                        SweepDirection="Clockwise"
+                                                        Point="30,7"/>
+                                        </PathFigure>
+                                    </PathGeometry>
+                                </Path.Data>
+                            </Path>
+                            <!-- Полный круг -->
+                            <Path x:Name="FullCircle"
+                                  Stroke="#4F8EF7" StrokeThickness="4"
+                                  VerticalAlignment="Center" HorizontalAlignment="Center"
+                                  RenderTransformOrigin="0.5,0.5"
+                                  Opacity="0">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                                <Path.Data>
+                                    <EllipseGeometry Center="25,25" RadiusX="20" RadiusY="20"/>
+                                </Path.Data>
+                            </Path>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <!-- Вращение короткой дуги -->
+                                            <DoubleAnimation Storyboard.TargetName="ShortArc"
+                                                             Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
+                                                             From="0" To="360"
+                                                             Duration="0:0:1"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Появление/исчезновение короткой дуги -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="ShortArc"
+                                                                           Storyboard.TargetProperty="Opacity"
+                                                                           Duration="0:0:2"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame Value="1" KeyTime="0:0:0"/>
+                                                <LinearDoubleKeyFrame Value="1" KeyTime="0:0:1.2"/>
+                                                <LinearDoubleKeyFrame Value="0" KeyTime="0:0:1.6"/>
+                                                <LinearDoubleKeyFrame Value="0" KeyTime="0:0:2"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <!-- Вращение полного круга -->
+                                            <DoubleAnimation Storyboard.TargetName="FullCircle"
+                                                             Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)"
+                                                             From="0" To="360"
+                                                             Duration="0:0:1.5"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Появление/исчезновение полного круга -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="FullCircle"
+                                                                           Storyboard.TargetProperty="Opacity"
+                                                                           Duration="0:0:2"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame Value="0" KeyTime="0:0:0"/>
+                                                <LinearDoubleKeyFrame Value="0" KeyTime="0:0:1"/>
+                                                <LinearDoubleKeyFrame Value="1" KeyTime="0:0:1.4"/>
+                                                <LinearDoubleKeyFrame Value="1" KeyTime="0:0:1.8"/>
+                                                <LinearDoubleKeyFrame Value="0" KeyTime="0:0:2"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
     <Grid>
         <Border Background="#23272F" CornerRadius="16" Padding="40" Margin="120">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="340">
-                <TextBlock Text="Первичная настройка" 
-                           Foreground="#FFF" 
-                           FontSize="24" 
-                           FontWeight="Bold" 
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,12"/>
-                <TextBlock Text="Введите номер кабинета для этого ПК:" 
-                           Foreground="#B0B0B0" 
-                           FontSize="15" 
-                           Margin="0,0,0,8"/>
-                <TextBox Text="{Binding Office, UpdateSourceTrigger=PropertyChanged}" 
-                         Height="36"
-                         FontSize="16"
-                         Padding="10,0"
-                         Background="#2E2E2E" 
-                         Foreground="#FFF" 
-                         BorderBrush="#3A3A3A"
-                         BorderThickness="1"
-                         Margin="0,0,0,8"/>
-                <Button Content="Сохранить" 
-                        Command="{Binding SaveCommand}" 
-                        Height="38"
-                        FontSize="16"
-                        Background="#4F8EF7"
-                        Foreground="White"
-                        BorderThickness="0"
-                        FontWeight="SemiBold"
-                        IsDefault="True"
-                        HorizontalAlignment="Stretch"
-                        Margin="0,8,0,0"/>
-                <Button Content="Пропустить?" 
-                        Command="{Binding SkipCommand}" 
-                        Height="38"
-                        FontSize="14"
-                        Background="Transparent"
-                        Foreground="#B0B0B0"
-                        BorderThickness="0"
-                        HorizontalAlignment="Center"
-                        Margin="0,8,0,0" Width="339"/>
-            </StackPanel>
+            <Grid>
+                <!-- Основной контент -->
+                <StackPanel x:Name="MainContent" VerticalAlignment="Center" HorizontalAlignment="Center" Width="340"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}">
+                    <TextBlock Text="Первичная настройка" 
+                               Foreground="#FFF" 
+                               FontSize="24" FontWeight="Bold" 
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,12"/>
+                    <TextBlock Text="Введите номер кабинета для этого ПК:" 
+                               Foreground="#B0B0B0" 
+                               FontSize="15" 
+                               Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding Office, UpdateSourceTrigger=PropertyChanged}" 
+                             Height="36"
+                             FontSize="16"
+                             Padding="10,0"
+                             Background="#2E2E2E" 
+                             Foreground="#FFF" 
+                             BorderBrush="#3A3A3A"
+                             BorderThickness="1"
+                             Margin="0,0,0,8"/>
+                    <Button Content="Сохранить" 
+                            Command="{Binding SaveCommand}" 
+                            Height="38"
+                            FontSize="16"
+                            Background="#4F8EF7"
+                            Foreground="White"
+                            BorderThickness="0"
+                            FontWeight="SemiBold"
+                            IsDefault="True"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,8,0,0"/>
+                    <Button Content="Пропустить?" 
+                            Command="{Binding SkipCommand}" 
+                            Height="38"
+                            FontSize="14"
+                            Background="Transparent"
+                            Foreground="#B0B0B0"
+                            BorderThickness="0"
+                            HorizontalAlignment="Center"
+                            Margin="0,8,0,0" Width="339"/>
+                </StackPanel>
+                <!-- Спиннер и текст загрузки -->
+                <StackPanel x:Name="LoadingContent" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ProgressBar x:Name="loadingSpinner" 
+                                 IsIndeterminate="True"
+                                 Style="{StaticResource LoadingSpinnerStyle}"/>
+                    <TextBlock Text="Загружаем вас, минуточку" 
+                               Foreground="#FFF" 
+                               FontSize="16" 
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,10,0,0"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Page>

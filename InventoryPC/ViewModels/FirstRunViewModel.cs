@@ -1,5 +1,6 @@
 ﻿using InventoryPC.Models;
 using InventoryPC.Services;
+using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,9 +12,12 @@ namespace InventoryPC.ViewModels
     public class FirstRunViewModel : INotifyPropertyChanged
     {
         private readonly DatabaseService _dbService = new DatabaseService();
+        private readonly DataService _dataService = new DataService();
         private readonly string _logPath = @"C:\Inventory\log.txt";
         private string? _office;
         private readonly Computer _computer;
+        private bool _isLoading;
+        private double _progressValue;
 
         public string? Office
         {
@@ -22,6 +26,26 @@ namespace InventoryPC.ViewModels
             {
                 _office = value;
                 OnPropertyChanged(nameof(Office));
+            }
+        }
+
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        public double ProgressValue
+        {
+            get => _progressValue;
+            set
+            {
+                _progressValue = value;
+                OnPropertyChanged(nameof(ProgressValue));
             }
         }
 
@@ -46,8 +70,14 @@ namespace InventoryPC.ViewModels
                 if (!string.IsNullOrWhiteSpace(Office))
                 {
                     _computer.Office = Office;
+                    IsLoading = true;
+                    ProgressValue = 0;
+                    // Собираем данные
+                    var progress = new Progress<int>(value => ProgressValue = value);
+                    var collectedData = await _dataService.CollectDataAsync(progress);
+                    _computer.UpdateFromCollectedData(collectedData);
                     await _dbService.SaveComputerAsync(_computer);
-                    Log($"Saved Office: {_computer.Office} for PC: {_computer.Name}");
+                    Log($"Saved Office: {_computer.Office} and full data for PC: {_computer.Name}");
                     NavigateToMainPage();
                 }
                 else
@@ -59,20 +89,34 @@ namespace InventoryPC.ViewModels
             {
                 Log($"Error in SaveAsync: {ex.Message}\n{ex.StackTrace}");
             }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private async Task SkipAsync()
         {
             try
             {
-                _computer.Office = null; // Пустое значение для Office
+                _computer.Office = "Не определён";
+                IsLoading = true;
+                ProgressValue = 0;
+                // Собираем данные
+                var progress = new Progress<int>(value => ProgressValue = value);
+                var collectedData = await _dataService.CollectDataAsync(progress);
+                _computer.UpdateFromCollectedData(collectedData);
                 await _dbService.SaveComputerAsync(_computer);
-                Log($"Skipped Office for PC: {_computer.Name}");
+                Log($"Skipped Office, set to 'Не определён' and saved full data for PC: {_computer.Name}");
                 NavigateToMainPage();
             }
             catch (Exception ex)
             {
                 Log($"Error in SkipAsync: {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

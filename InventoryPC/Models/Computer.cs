@@ -1,4 +1,6 @@
-﻿namespace InventoryPC.Models
+﻿using System;
+
+namespace InventoryPC.Models
 {
     public class Computer
     {
@@ -23,6 +25,28 @@
         public string? Gateway { get; set; }
         public string? DNSServers { get; set; }
         public string? LastChecked { get; set; }
-        public string? Printers { get; set; } // Новое поле
+        public string? Printers { get; set; }
+
+        public void UpdateFromCollectedData(Computer collectedData)
+        {
+            Branch = collectedData.Branch;
+            WindowsVersion = collectedData.WindowsVersion;
+            ActivationStatus = collectedData.ActivationStatus;
+            LicenseExpiry = collectedData.LicenseExpiry;
+            IPAddress = collectedData.IPAddress;
+            MACAddress = collectedData.MACAddress;
+            Processor = collectedData.Processor;
+            Monitors = collectedData.Monitors;
+            Mouse = collectedData.Mouse;
+            Keyboard = collectedData.Keyboard;
+            OfficeStatus = collectedData.OfficeStatus;
+            OfficeLicenseName = collectedData.OfficeLicenseName;
+            Memory = collectedData.Memory;
+            SubnetMask = collectedData.SubnetMask;
+            Gateway = collectedData.Gateway;
+            DNSServers = collectedData.DNSServers;
+            LastChecked = collectedData.LastChecked;
+            Printers = collectedData.Printers;
+        }
     }
 }
