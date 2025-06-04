@@ -17,50 +17,62 @@
         <StackPanel Orientation="Horizontal" Margin="10">
             <Button Content="Назад" Command="{Binding NavigateBackCommand}" Width="100" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}"/>
+            <Button Content="Сохранить" Command="{Binding SaveCommand}" Width="100" Margin="5"
+                    Style="{StaticResource RoundedButtonStyle}"/>
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="10">
-            <Border Background="#2E2E2E" CornerRadius="10" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="{Binding Computer.Name, StringFormat=ПК: {0}}" FontSize="20" FontWeight="Bold" Foreground="White" Margin="0,0,0,10"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="{Binding Computer.User, StringFormat=Пользователь: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.Branch, StringFormat=Филиал: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.Office, StringFormat=Кабинет: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.WindowsVersion, StringFormat=Windows: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.ActivationStatus, StringFormat=Активация: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.LicenseExpiry, StringFormat=Срок лицензии: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.IPAddress, StringFormat=IP-адрес: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.MACAddress, StringFormat=MAC-адрес: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.SubnetMask, StringFormat=Маска подсети: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.Gateway, StringFormat=Шлюз: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="{Binding Computer.DNSServers, StringFormat=DNS-серверы: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Computer.Memory, StringFormat=ОЗУ: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.Processor, StringFormat=Процессор: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Computer.Monitors, StringFormat=Мониторы: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Computer.Mouse, StringFormat=Мышь: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.Keyboard, StringFormat=Клавиатура: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.OfficeStatus, StringFormat=Office: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                            <TextBlock Text="{Binding Computer.OfficeLicenseName, StringFormat=Office Лицензия: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding Computer.LastChecked, StringFormat=Дата проверки: {0}}" FontSize="14" Foreground="#CCCCCC" Margin="0,5"/>
-                        </StackPanel>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
-                        <TextBlock Text="Филиал:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Text="{Binding Computer.Branch, UpdateSourceTrigger=PropertyChanged}" Width="200" Margin="0,0,20,0"/>
-                        <TextBlock Text="Кабинет:" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Text="{Binding Computer.Office, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
-                    </StackPanel>
-                    <Button Content="Сохранить" Command="{Binding SaveComputerCommand}" Width="100" Margin="0,10,0,0"
-                            Style="{StaticResource RoundedButtonStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="10">
+                    <TextBlock Text="Имя ПК:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Name, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Пользователь:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.User, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Филиал:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBox Text="{Binding Computer.Branch, UpdateSourceTrigger=PropertyChanged}" Width="200" Margin="0,5"/>
+                    <TextBlock Text="Кабинет:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBox Text="{Binding Computer.Office, UpdateSourceTrigger=PropertyChanged}" Width="200" Margin="0,5"/>
+                    <TextBlock Text="Версия Windows:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.WindowsVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Статус активации:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.ActivationStatus, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Срок лицензии:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.LicenseExpiry, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="IP-адрес:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.IPAddress, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="MAC-адрес:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.MACAddress, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Принтеры:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Printers, FallbackValue=Нет}" Foreground="#CCCCCC" FontSize="12" Margin="0,5" TextWrapping="Wrap"/>
                 </StackPanel>
-            </Border>
+                <StackPanel Grid.Column="1" Margin="10">
+                    <TextBlock Text="Процессор:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Processor, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Мониторы:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Monitors, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5" TextWrapping="Wrap"/>
+                    <TextBlock Text="Мышь:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Mouse, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Клавиатура:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Keyboard, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Статус Office:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.OfficeStatus, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Лицензия Office:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.OfficeLicenseName, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5" TextWrapping="Wrap"/>
+                    <TextBlock Text="ОЗУ:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Memory, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Маска подсети:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.SubnetMask, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="Шлюз:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.Gateway, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                    <TextBlock Text="DNS-серверы:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.DNSServers, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5" TextWrapping="Wrap"/>
+                    <TextBlock Text="Последняя проверка:" Foreground="White" FontSize="14" Margin="0,5"/>
+                    <TextBlock Text="{Binding Computer.LastChecked, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+                </StackPanel>
+            </Grid>
         </ScrollViewer>
     </Grid>
 </Page>

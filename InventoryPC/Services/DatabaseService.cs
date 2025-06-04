@@ -44,7 +44,8 @@ namespace InventoryPC.Services
                     SubnetMask TEXT,
                     Gateway TEXT,
                     DNSServers TEXT,
-                    LastChecked TEXT
+                    LastChecked TEXT,
+                    Printers TEXT
                 )";
             command.ExecuteNonQuery();
         }
@@ -61,11 +62,11 @@ namespace InventoryPC.Services
                     INSERT OR REPLACE INTO Computers (
                         Name, User, Branch, Office, WindowsVersion, ActivationStatus, LicenseExpiry, 
                         IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, 
-                        OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked
+                        OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked, Printers
                     ) VALUES (
                         $name, $user, $branch, $office, $windowsVersion, $activationStatus, $licenseExpiry, 
                         $ipAddress, $macAddress, $processor, $monitors, $mouse, $keyboard, $officeStatus, 
-                        $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked
+                        $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked, $printers
                     )";
 
                 command.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
@@ -88,6 +89,7 @@ namespace InventoryPC.Services
                 command.Parameters.AddWithValue("$gateway", computer.Gateway ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("$dnsServers", computer.DNSServers ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("$lastChecked", computer.LastChecked ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$printers", computer.Printers ?? (object)DBNull.Value);
 
                 await command.ExecuteNonQueryAsync();
             }
@@ -130,7 +132,8 @@ namespace InventoryPC.Services
                     SubnetMask = reader.IsDBNull(17) ? null : reader.GetString(17),
                     Gateway = reader.IsDBNull(18) ? null : reader.GetString(18),
                     DNSServers = reader.IsDBNull(19) ? null : reader.GetString(19),
-                    LastChecked = reader.IsDBNull(20) ? null : reader.GetString(20)
+                    LastChecked = reader.IsDBNull(20) ? null : reader.GetString(20),
+                    Printers = reader.IsDBNull(21) ? null : reader.GetString(21)
                 });
             }
             return computers;

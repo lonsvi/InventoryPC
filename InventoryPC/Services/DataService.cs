@@ -111,6 +111,12 @@ namespace InventoryPC.Services
             computer.OfficeStatus = ParseOfficeStatus(officeOutput);
             computer.OfficeLicenseName = ParseOfficeLicenseName(officeOutput);
 
+            // Шаг 10: Принтеры (95%)
+            progress.Report(95);
+            string printerOutput = await RunCommandAsync("wmic printer get Name,PortName");
+            Log("wmic printer output: " + Truncate(printerOutput, 500));
+            computer.Printers = ParsePrinters(printerOutput);
+
             // Завершение (100%)
             progress.Report(100);
             Log("Data collection completed.");
@@ -328,7 +334,13 @@ namespace InventoryPC.Services
             Regex regex = new Regex(@"Name\s+(.+)", RegexOptions.Multiline);
             var matches = regex.Matches(output);
             if (matches.Count > 0)
-                return string.Join(", ", matches.Cast<Match>().Select(m => m.Groups[1].Value.Trim()));
+            {
+                var monitors = matches.Cast<Match>()
+                    .Select(m => m.Groups[1].Value.Trim())
+                    .Where(m => !string.IsNullOrEmpty(m))
+                    .Distinct();
+                return string.Join(", ", monitors);
+            }
             return "Unknown";
         }
 
@@ -366,6 +378,20 @@ namespace InventoryPC.Services
             if (matches.Count > 0)
                 return string.Join(", ", matches.Cast<Match>().Select(m => m.Groups[1].Value.Trim()));
             return "Unknown";
+        }
+
+        private string ParsePrinters(string output)
+        {
+            Regex regex = new Regex(@"Name\s+(.+?)(?:\r\n\s*PortName\s+(.+?)(?:\r\n|$))", RegexOptions.Multiline);
+            var matches = regex.Matches(output);
+            if (matches.Count > 0)
+            {
+                var printers = matches.Cast<Match>()
+                    .Select(m => $"{m.Groups[1].Value.Trim()} ({m.Groups[2].Value.Trim()})")
+                    .Where(p => !string.IsNullOrEmpty(p));
+                return string.Join(", ", printers);
+            }
+            return "None";
         }
 
         private void Log(string message)
