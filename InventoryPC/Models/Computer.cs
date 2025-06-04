@@ -23,5 +23,6 @@
         public string? Gateway { get; set; }
         public string? DNSServers { get; set; }
         public string? LastChecked { get; set; }
+        public string? Printers { get; set; } // Новое поле
     }
 }

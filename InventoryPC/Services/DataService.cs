@@ -217,7 +217,7 @@ namespace InventoryPC.Services
 
         private string ParseSystemInfo(string output)
         {
-            Regex regex = new Regex(@"Имя ОС:\s*(.+?)(?:\r\n|$)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"(?:Имя ОС|Название ОС):\s*(.+?)(?:\r\n|$)", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
             if (match.Success)
                 return match.Groups[1].Value.Trim();
