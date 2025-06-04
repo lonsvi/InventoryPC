@@ -32,7 +32,7 @@ namespace InventoryPC.Services
             var computer = new Computer
             {
                 Name = Environment.MachineName ?? "Unknown",
-                User = Environment.UserName ?? "Unknown", // Текущий пользователь
+                User = Environment.UserName ?? "Unknown",
                 LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             };
 
@@ -55,23 +55,29 @@ namespace InventoryPC.Services
             // Шаг 3: IP, MAC, маска подсети, шлюз, DNS (30%)
             progress.Report(30);
             string ipconfigOutput = await RunCommandAsync("ipconfig /all");
-            Log("ipconfig output: " + Truncate(ipconfigOutput, 2000));
+            Log("ipconfig output: " + Truncate(ipconfigOutput, 4000));
             computer.IPAddress = ParseIPAddress(ipconfigOutput);
             computer.MACAddress = ParseMACAddress(ipconfigOutput);
             computer.SubnetMask = ParseSubnetMask(ipconfigOutput);
             computer.Gateway = ParseGateway(ipconfigOutput);
             computer.DNSServers = ParseDNSServers(ipconfigOutput);
 
+            // Установка филиала
+            computer.Branch = GetBranchFromIPAddress(computer.IPAddress);
+            Log($"Parsed IP: {computer.IPAddress}, Branch: {computer.Branch}");
+
             // Шаг 4: IP и MAC через PowerShell (резервный, 40%)
             progress.Report(40);
             if (computer.IPAddress == "Unknown" || computer.MACAddress == "Unknown")
             {
-                string psOutput = await RunPowerShellCommandAsync("Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object Name, MacAddress, @{Name='IPAddress';Expression={(Get-NetIPAddress -InterfaceAlias $_.Name -AddressFamily IPv4).IPAddress}}");
+                string psOutput = await RunPowerShellCommandAsync("Get-NetAdapter | Where-Object {$_.Status -eq 'Up' -and ($_.Name -like '*Ethernet*' -or $_.InterfaceDescription -like '*Realtek*')} | Select-Object Name, MacAddress, @{Name='IPAddress';Expression={(Get-NetIPAddress -InterfaceAlias $_.Name -AddressFamily IPv4).IPAddress}}");
                 Log("powershell netadapter output: " + Truncate(psOutput, 1000));
                 if (computer.IPAddress == "Unknown")
                     computer.IPAddress = ParsePowerShellIPAddress(psOutput);
                 if (computer.MACAddress == "Unknown")
                     computer.MACAddress = ParsePowerShellMACAddress(psOutput);
+                computer.Branch = GetBranchFromIPAddress(computer.IPAddress);
+                Log($"PowerShell IP: {computer.IPAddress}, Branch: {computer.Branch}");
             }
 
             // Шаг 5: Процессор (50%)
@@ -109,6 +115,32 @@ namespace InventoryPC.Services
             progress.Report(100);
             Log("Data collection completed.");
             return computer;
+        }
+
+        private string GetBranchFromIPAddress(string? ipAddress)
+        {
+            if (string.IsNullOrEmpty(ipAddress) || ipAddress == "Unknown")
+                return "Unknown";
+
+            try
+            {
+                var octets = ipAddress.Split('.');
+                if (octets.Length != 4 || !int.TryParse(octets[2], out int thirdOctet))
+                    return "Unknown";
+
+                return thirdOctet switch
+                {
+                    0 => "Писарева",
+                    1 => "Гоголя",
+                    2 => "Р. Люксембург",
+                    _ => $"Неизвестный филиал ({thirdOctet})"
+                };
+            }
+            catch (Exception ex)
+            {
+                Log($"Error parsing IP address for branch: {ex.Message}");
+                return "Unknown";
+            }
         }
 
         private async Task<string> RunCommandAsync(string command)
@@ -223,59 +255,38 @@ namespace InventoryPC.Services
 
         private string ParseIPAddress(string output)
         {
-            Regex regex = new Regex(@"IPv4-адрес.*?:\s*([\d\.]+)\s*\(Основной\)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"Адаптер Ethernet.*?:[\s\S]*?IPv4.*?:\s*([\d\.]+)(?:\s*\(Основной\))?", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
             if (match.Success)
                 return match.Groups[1].Value.Trim();
-            regex = new Regex(@"IPv4 Address.*?:\s*([\d\.]+)\s*\(Preferred\)", RegexOptions.IgnoreCase);
-            match = regex.Match(output);
-            return match.Success ? match.Groups[1].Value.Trim() : "Unknown";
+            return "Unknown";
         }
 
         private string ParseMACAddress(string output)
         {
-            Regex regex = new Regex(@"Физический адрес.*?:\s*([\w\-]+)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"Адаптер Ethernet.*?:[\s\S]*?Физический адрес.*?:\s*([\w\-]+)", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
-            if (match.Success)
-                return match.Groups[1].Value.Trim();
-            regex = new Regex(@"Physical Address.*?:\s*([\w\-]+)", RegexOptions.IgnoreCase);
-            match = regex.Match(output);
             return match.Success ? match.Groups[1].Value.Trim() : "Unknown";
         }
 
         private string ParseSubnetMask(string output)
         {
-            Regex regex = new Regex(@"Маска подсети.*?:\s*([\d\.]+)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"Адаптер Ethernet.*?:[\s\S]*?Маска подсети.*?:\s*([\d\.]+)", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
-            if (match.Success)
-                return match.Groups[1].Value.Trim();
-            regex = new Regex(@"Subnet Mask.*?:\s*([\d\.]+)", RegexOptions.IgnoreCase);
-            match = regex.Match(output);
             return match.Success ? match.Groups[1].Value.Trim() : "Unknown";
         }
 
         private string ParseGateway(string output)
         {
-            Regex regex = new Regex(@"Основной шлюз.*?:\s*([\d\.]+)?", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"Адаптер Ethernet.*?:[\s\S]*?Основной шлюз.*?:\s*([\d\.]+)?", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
-            if (match.Success)
-                return match.Groups[1].Value?.Trim() ?? "None";
-            regex = new Regex(@"Default Gateway.*?:\s*([\d\.]+)?", RegexOptions.IgnoreCase);
-            match = regex.Match(output);
             return match.Success ? match.Groups[1].Value?.Trim() ?? "None" : "None";
         }
 
         private string ParseDNSServers(string output)
         {
-            Regex regex = new Regex(@"DNS-серверы.*?:\s*([\d\.:]+(?:\s+[\d\.:]+)*)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"Адаптер Ethernet.*?:[\s\S]*?DNS-серверы.*?:\s*([\d\.:]+(?:\s+[\d\.:]+)*)", RegexOptions.IgnoreCase);
             var match = regex.Match(output);
-            if (match.Success)
-            {
-                string dnsList = match.Groups[1].Value.Trim();
-                return string.Join(", ", dnsList.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
-            }
-            regex = new Regex(@"DNS Servers.*?:\s*([\d\.:]+(?:\s+[\d\.:]+)*)", RegexOptions.IgnoreCase);
-            match = regex.Match(output);
             if (match.Success)
             {
                 string dnsList = match.Groups[1].Value.Trim();

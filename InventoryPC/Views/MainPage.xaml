@@ -19,6 +19,8 @@
         <StackPanel Orientation="Horizontal" Margin="10">
             <Button Content="Обновить" Command="{Binding RefreshCommand}" Width="100" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}"/>
+            <Button Content="Экспорт в CSV" Command="{Binding ExportToCsvCommand}" Width="100" Margin="5"
+                    Style="{StaticResource RoundedButtonStyle}"/>
         </StackPanel>
         <ProgressBar Grid.Row="1" Value="{Binding ProgressValue}" 
                      Visibility="{Binding IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}" 
@@ -41,8 +43,8 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
                                     <TextBlock Text="{Binding User, StringFormat=Пользователь: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding Branch, StringFormat=Филиал: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
-                                    <TextBlock Text="{Binding Office, StringFormat=Кабинет: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Branch, StringFormat=Филиал: {0}, FallbackValue=Не указан}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Office, StringFormat=Кабинет: {0}, FallbackValue=Не указан}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Button>
                         </Border>

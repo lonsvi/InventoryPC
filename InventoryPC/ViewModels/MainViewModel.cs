@@ -1,9 +1,13 @@
-﻿using InventoryPC.Models;
+﻿using CsvHelper;
+using InventoryPC.Models;
 using InventoryPC.Services;
 using InventoryPC.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -49,12 +53,14 @@ namespace InventoryPC.ViewModels
 
         public ICommand RefreshCommand { get; }
         public ICommand NavigateToDetailsCommand { get; }
+        public ICommand ExportToCsvCommand { get; }
 
         public MainViewModel()
         {
             Computers = new ObservableCollection<Computer>();
             RefreshCommand = new AsyncRelayCommand(RefreshAsync);
             NavigateToDetailsCommand = new RelayCommand<Computer>(NavigateToDetails);
+            ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync);
             LoadDataAsync();
         }
 
@@ -76,6 +82,24 @@ namespace InventoryPC.ViewModels
             Computers = new ObservableCollection<Computer>(await _dbService.GetComputersAsync());
 
             IsProgressVisible = false;
+        }
+
+        private async Task ExportToCsvAsync()
+        {
+            try
+            {
+                var computers = await _dbService.GetComputersAsync();
+                using (var writer = new StreamWriter(@"C:\Inventory\computers.csv", false, Encoding.UTF8))
+                using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                {
+                    csv.WriteRecords(computers);
+                }
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: Exported {computers.Count} computers to C:\\Inventory\\computers.csv\n");
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: Error exporting to CSV: {ex.Message}\n{ex.StackTrace}\n");
+            }
         }
 
         private void NavigateToDetails(Computer? computer)

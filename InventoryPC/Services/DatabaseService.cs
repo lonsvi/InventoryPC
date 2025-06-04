@@ -1,8 +1,9 @@
 ﻿using Microsoft.Data.Sqlite;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 using InventoryPC.Models;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.IO;
 
 namespace InventoryPC.Services
 {
@@ -12,6 +13,7 @@ namespace InventoryPC.Services
 
         public DatabaseService()
         {
+            Directory.CreateDirectory(@"C:\Inventory");
             InitializeDatabase();
         }
 
@@ -23,7 +25,7 @@ namespace InventoryPC.Services
             command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Computers (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Name TEXT NOT NULL,
+                    Name TEXT,
                     User TEXT,
                     Branch TEXT,
                     Office TEXT,
@@ -42,13 +44,12 @@ namespace InventoryPC.Services
                     SubnetMask TEXT,
                     Gateway TEXT,
                     DNSServers TEXT,
-                    LastChecked TEXT NOT NULL
+                    LastChecked TEXT
                 )";
             command.ExecuteNonQuery();
         }
-        
 
-      public async Task SaveComputerAsync(Computer computer)
+        public async Task SaveComputerAsync(Computer computer)
         {
             try
             {
@@ -67,7 +68,6 @@ namespace InventoryPC.Services
                         $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked
                     )";
 
-                // Добавляем параметры с обработкой null
                 command.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
@@ -93,7 +93,6 @@ namespace InventoryPC.Services
             }
             catch (Exception ex)
             {
-                // Логируем ошибку в файл
                 File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: Error in SaveComputerAsync: {ex.Message}\n{ex.StackTrace}\n");
                 throw;
             }
@@ -112,26 +111,26 @@ namespace InventoryPC.Services
                 computers.Add(new Computer
                 {
                     Id = reader.GetInt32(0),
-                    Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
-                    User = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                    Branch = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                    Office = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                    WindowsVersion = reader.IsDBNull(5) ? "" : reader.GetString(5),
-                    ActivationStatus = reader.IsDBNull(6) ? "" : reader.GetString(6),
-                    LicenseExpiry = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                    IPAddress = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                    MACAddress = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                    Processor = reader.IsDBNull(10) ? "" : reader.GetString(10),
-                    Monitors = reader.IsDBNull(11) ? "" : reader.GetString(11),
-                    Mouse = reader.IsDBNull(12) ? "" : reader.GetString(12),
-                    Keyboard = reader.IsDBNull(13) ? "" : reader.GetString(13),
-                    OfficeStatus = reader.IsDBNull(14) ? "" : reader.GetString(14),
-                    OfficeLicenseName = reader.IsDBNull(15) ? "" : reader.GetString(15),
-                    Memory = reader.IsDBNull(16) ? "" : reader.GetString(16),
-                    SubnetMask = reader.IsDBNull(17) ? "" : reader.GetString(17),
-                    Gateway = reader.IsDBNull(18) ? "" : reader.GetString(18),
-                    DNSServers = reader.IsDBNull(19) ? "" : reader.GetString(19),
-                    LastChecked = reader.IsDBNull(20) ? "" : reader.GetString(20)
+                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    User = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Branch = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    Office = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    WindowsVersion = reader.IsDBNull(5) ? null : reader.GetString(5),
+                    ActivationStatus = reader.IsDBNull(6) ? null : reader.GetString(6),
+                    LicenseExpiry = reader.IsDBNull(7) ? null : reader.GetString(7),
+                    IPAddress = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    MACAddress = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    Processor = reader.IsDBNull(10) ? null : reader.GetString(10),
+                    Monitors = reader.IsDBNull(11) ? null : reader.GetString(11),
+                    Mouse = reader.IsDBNull(12) ? null : reader.GetString(12),
+                    Keyboard = reader.IsDBNull(13) ? null : reader.GetString(13),
+                    OfficeStatus = reader.IsDBNull(14) ? null : reader.GetString(14),
+                    OfficeLicenseName = reader.IsDBNull(15) ? null : reader.GetString(15),
+                    Memory = reader.IsDBNull(16) ? null : reader.GetString(16),
+                    SubnetMask = reader.IsDBNull(17) ? null : reader.GetString(17),
+                    Gateway = reader.IsDBNull(18) ? null : reader.GetString(18),
+                    DNSServers = reader.IsDBNull(19) ? null : reader.GetString(19),
+                    LastChecked = reader.IsDBNull(20) ? null : reader.GetString(20)
                 });
             }
             return computers;
