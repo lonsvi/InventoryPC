@@ -32,6 +32,7 @@ namespace InventoryPC.Services
             var computer = new Computer
             {
                 Name = Environment.MachineName ?? "Unknown",
+                User = Environment.UserName ?? "Unknown", // Текущий пользователь
                 LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             };
 

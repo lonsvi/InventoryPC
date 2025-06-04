@@ -2,6 +2,7 @@
 using InventoryPC.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace InventoryPC.Services
 {
@@ -23,6 +24,9 @@ namespace InventoryPC.Services
                 CREATE TABLE IF NOT EXISTS Computers (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT NOT NULL,
+                    User TEXT,
+                    Branch TEXT,
+                    Office TEXT,
                     WindowsVersion TEXT,
                     ActivationStatus TEXT,
                     LicenseExpiry TEXT,
@@ -42,33 +46,57 @@ namespace InventoryPC.Services
                 )";
             command.ExecuteNonQuery();
         }
+        
 
-        public async Task SaveComputerAsync(Computer computer)
+      public async Task SaveComputerAsync(Computer computer)
         {
-            using var connection = new SqliteConnection(_connectionString);
-            await connection.OpenAsync();
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-                INSERT OR REPLACE INTO Computers (Name, WindowsVersion, ActivationStatus, LicenseExpiry, IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked)
-                VALUES ($name, $version, $status, $expiry, $ip, $mac, $processor, $monitors, $mouse, $keyboard, $office, $officeName, $memory, $subnet, $gateway, $dns, $checked)";
-            command.Parameters.AddWithValue("$name", computer.Name ?? "");
-            command.Parameters.AddWithValue("$version", computer.WindowsVersion ?? "");
-            command.Parameters.AddWithValue("$status", computer.ActivationStatus ?? "");
-            command.Parameters.AddWithValue("$expiry", computer.LicenseExpiry ?? "");
-            command.Parameters.AddWithValue("$ip", computer.IPAddress ?? "");
-            command.Parameters.AddWithValue("$mac", computer.MACAddress ?? "");
-            command.Parameters.AddWithValue("$processor", computer.Processor ?? "");
-            command.Parameters.AddWithValue("$monitors", computer.Monitors ?? "");
-            command.Parameters.AddWithValue("$mouse", computer.Mouse ?? "");
-            command.Parameters.AddWithValue("$keyboard", computer.Keyboard ?? "");
-            command.Parameters.AddWithValue("$office", computer.OfficeStatus ?? "");
-            command.Parameters.AddWithValue("$officeName", computer.OfficeLicenseName ?? "");
-            command.Parameters.AddWithValue("$memory", computer.Memory ?? "");
-            command.Parameters.AddWithValue("$subnet", computer.SubnetMask ?? "");
-            command.Parameters.AddWithValue("$gateway", computer.Gateway ?? "");
-            command.Parameters.AddWithValue("$dns", computer.DNSServers ?? "");
-            command.Parameters.AddWithValue("$checked", computer.LastChecked ?? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            await command.ExecuteNonQueryAsync();
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    INSERT OR REPLACE INTO Computers (
+                        Name, User, Branch, Office, WindowsVersion, ActivationStatus, LicenseExpiry, 
+                        IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, 
+                        OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked
+                    ) VALUES (
+                        $name, $user, $branch, $office, $windowsVersion, $activationStatus, $licenseExpiry, 
+                        $ipAddress, $macAddress, $processor, $monitors, $mouse, $keyboard, $officeStatus, 
+                        $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked
+                    )";
+
+                // Добавляем параметры с обработкой null
+                command.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$office", computer.Office ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$windowsVersion", computer.WindowsVersion ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$activationStatus", computer.ActivationStatus ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$licenseExpiry", computer.LicenseExpiry ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$ipAddress", computer.IPAddress ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$macAddress", computer.MACAddress ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$processor", computer.Processor ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$monitors", computer.Monitors ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$mouse", computer.Mouse ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$keyboard", computer.Keyboard ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$officeStatus", computer.OfficeStatus ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$officeLicenseName", computer.OfficeLicenseName ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$memory", computer.Memory ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$subnetMask", computer.SubnetMask ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$gateway", computer.Gateway ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$dnsServers", computer.DNSServers ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("$lastChecked", computer.LastChecked ?? (object)DBNull.Value);
+
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                // Логируем ошибку в файл
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: Error in SaveComputerAsync: {ex.Message}\n{ex.StackTrace}\n");
+                throw;
+            }
         }
 
         public async Task<List<Computer>> GetComputersAsync()
@@ -85,22 +113,25 @@ namespace InventoryPC.Services
                 {
                     Id = reader.GetInt32(0),
                     Name = reader.IsDBNull(1) ? "" : reader.GetString(1),
-                    WindowsVersion = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                    ActivationStatus = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                    LicenseExpiry = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                    IPAddress = reader.IsDBNull(5) ? "" : reader.GetString(5),
-                    MACAddress = reader.IsDBNull(6) ? "" : reader.GetString(6),
-                    Processor = reader.IsDBNull(7) ? "" : reader.GetString(7),
-                    Monitors = reader.IsDBNull(8) ? "" : reader.GetString(8),
-                    Mouse = reader.IsDBNull(9) ? "" : reader.GetString(9),
-                    Keyboard = reader.IsDBNull(10) ? "" : reader.GetString(10),
-                    OfficeStatus = reader.IsDBNull(11) ? "" : reader.GetString(11),
-                    OfficeLicenseName = reader.IsDBNull(12) ? "" : reader.GetString(12),
-                    Memory = reader.IsDBNull(13) ? "" : reader.GetString(13),
-                    SubnetMask = reader.IsDBNull(14) ? "" : reader.GetString(14),
-                    Gateway = reader.IsDBNull(15) ? "" : reader.GetString(15),
-                    DNSServers = reader.IsDBNull(16) ? "" : reader.GetString(16),
-                    LastChecked = reader.IsDBNull(17) ? "" : reader.GetString(17)
+                    User = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                    Branch = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                    Office = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                    WindowsVersion = reader.IsDBNull(5) ? "" : reader.GetString(5),
+                    ActivationStatus = reader.IsDBNull(6) ? "" : reader.GetString(6),
+                    LicenseExpiry = reader.IsDBNull(7) ? "" : reader.GetString(7),
+                    IPAddress = reader.IsDBNull(8) ? "" : reader.GetString(8),
+                    MACAddress = reader.IsDBNull(9) ? "" : reader.GetString(9),
+                    Processor = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                    Monitors = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                    Mouse = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                    Keyboard = reader.IsDBNull(13) ? "" : reader.GetString(13),
+                    OfficeStatus = reader.IsDBNull(14) ? "" : reader.GetString(14),
+                    OfficeLicenseName = reader.IsDBNull(15) ? "" : reader.GetString(15),
+                    Memory = reader.IsDBNull(16) ? "" : reader.GetString(16),
+                    SubnetMask = reader.IsDBNull(17) ? "" : reader.GetString(17),
+                    Gateway = reader.IsDBNull(18) ? "" : reader.GetString(18),
+                    DNSServers = reader.IsDBNull(19) ? "" : reader.GetString(19),
+                    LastChecked = reader.IsDBNull(20) ? "" : reader.GetString(20)
                 });
             }
             return computers;

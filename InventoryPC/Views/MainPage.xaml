@@ -4,40 +4,51 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:InventoryPC.ViewModels"
+      xmlns:local="clr-namespace:InventoryPC.Models"
       mc:Ignorable="d" 
-      d:DesignHeight="450" d:DesignWidth="1200">
+      d:DesignHeight="600" d:DesignWidth="1000">
     <Page.DataContext>
-        <vm:MainViewModel />
+        <vm:MainViewModel/>
     </Page.DataContext>
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button Content="Обновить" Command="{Binding RefreshCommand}" Margin="10" Width="100" />
-        <ProgressBar Grid.Row="1" Value="{Binding ProgressValue}" Visibility="{Binding IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}" 
-                     Minimum="0" Maximum="100" Height="20" Margin="10" />
-        <DataGrid Grid.Row="2" ItemsSource="{Binding Computers}" AutoGenerateColumns="False" Margin="10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Имя ПК" Binding="{Binding Name}" Width="*" />
-                <DataGridTextColumn Header="Windows" Binding="{Binding WindowsVersion}" Width="*" />
-                <DataGridTextColumn Header="Активация" Binding="{Binding ActivationStatus}" Width="*" />
-                <DataGridTextColumn Header="Срок лицензии" Binding="{Binding LicenseExpiry}" Width="*" />
-                <DataGridTextColumn Header="IP-адрес" Binding="{Binding IPAddress}" Width="*" />
-                <DataGridTextColumn Header="MAC-адрес" Binding="{Binding MACAddress}" Width="*" />
-                <DataGridTextColumn Header="Маска подсети" Binding="{Binding SubnetMask}" Width="*" />
-                <DataGridTextColumn Header="Шлюз" Binding="{Binding Gateway}" Width="*" />
-                <DataGridTextColumn Header="DNS-серверы" Binding="{Binding DNSServers}" Width="*" />
-                <DataGridTextColumn Header="ОЗУ" Binding="{Binding Memory}" Width="*" />
-                <DataGridTextColumn Header="Процессор" Binding="{Binding Processor}" Width="*" />
-                <DataGridTextColumn Header="Мониторы" Binding="{Binding Monitors}" Width="*" />
-                <DataGridTextColumn Header="Мышь" Binding="{Binding Mouse}" Width="*" />
-                <DataGridTextColumn Header="Клавиатура" Binding="{Binding Keyboard}" Width="*" />
-                <DataGridTextColumn Header="Office" Binding="{Binding OfficeStatus}" Width="*" />
-                <DataGridTextColumn Header="Office Лицензия" Binding="{Binding OfficeLicenseName}" Width="*" />
-                <DataGridTextColumn Header="Дата проверки" Binding="{Binding LastChecked}" Width="*" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <StackPanel Orientation="Horizontal" Margin="10">
+            <Button Content="Обновить" Command="{Binding RefreshCommand}" Width="100" Margin="5"
+                    Style="{StaticResource RoundedButtonStyle}"/>
+        </StackPanel>
+        <ProgressBar Grid.Row="1" Value="{Binding ProgressValue}" 
+                     Visibility="{Binding IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                     Minimum="0" Maximum="100" Height="20" Margin="10"/>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Computers}" Margin="10">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:Computer}">
+                        <Border Style="{StaticResource TileStyle}" RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <Button Command="{Binding DataContext.NavigateToDetailsCommand, RelativeSource={RelativeSource AncestorType=Page}}" 
+                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold" Foreground="White" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding User, StringFormat=Пользователь: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Branch, StringFormat=Филиал: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Office, StringFormat=Кабинет: {0}}" FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </Page>
