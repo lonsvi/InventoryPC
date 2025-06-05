@@ -10,6 +10,7 @@ namespace InventoryPC.Services
     public class DatabaseService
     {
         private readonly string _connectionString = @"Data Source=C:\Inventory\inventory.db";
+        private readonly string _logPath = @"C:\Inventory\log.txt";
 
         public DatabaseService()
         {
@@ -45,8 +46,20 @@ namespace InventoryPC.Services
                     Gateway TEXT,
                     DNSServers TEXT,
                     LastChecked TEXT,
-                    Printers TEXT
-                )";
+                    Printers TEXT,
+                    AntivirusName TEXT,
+                    AntivirusVersion TEXT,
+                    AntivirusLicenseExpiry TEXT,
+                    Motherboard TEXT,
+                    BIOSVersion TEXT,
+                    VideoCard TEXT,
+                    VideoCardMemory TEXT,
+                    VideoCardDriver TEXT,
+                    Disks TEXT,
+                    SSID TEXT,
+                    InventoryNumber TEXT
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_computers_name ON Computers(Name);";
             command.ExecuteNonQuery();
         }
 
@@ -57,45 +70,146 @@ namespace InventoryPC.Services
                 using var connection = new SqliteConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var command = connection.CreateCommand();
-                command.CommandText = @"
-                    INSERT OR REPLACE INTO Computers (
-                        Name, User, Branch, Office, WindowsVersion, ActivationStatus, LicenseExpiry, 
-                        IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, 
-                        OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked, Printers
-                    ) VALUES (
-                        $name, $user, $branch, $office, $windowsVersion, $activationStatus, $licenseExpiry, 
-                        $ipAddress, $macAddress, $processor, $monitors, $mouse, $keyboard, $officeStatus, 
-                        $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked, $printers
-                    )";
+                // Проверяем, существует ли запись с таким Name
+                var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "SELECT Id FROM Computers WHERE Name = $name";
+                checkCommand.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
+                var existingId = await checkCommand.ExecuteScalarAsync();
 
-                command.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$office", computer.Office ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$windowsVersion", computer.WindowsVersion ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$activationStatus", computer.ActivationStatus ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$licenseExpiry", computer.LicenseExpiry ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$ipAddress", computer.IPAddress ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$macAddress", computer.MACAddress ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$processor", computer.Processor ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$monitors", computer.Monitors ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$mouse", computer.Mouse ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$keyboard", computer.Keyboard ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$officeStatus", computer.OfficeStatus ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$officeLicenseName", computer.OfficeLicenseName ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$memory", computer.Memory ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$subnetMask", computer.SubnetMask ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$gateway", computer.Gateway ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$dnsServers", computer.DNSServers ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$lastChecked", computer.LastChecked ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("$printers", computer.Printers ?? (object)DBNull.Value);
+                if (existingId != null)
+                {
+                    // Обновляем существующую запись
+                    var updateCommand = connection.CreateCommand();
+                    updateCommand.CommandText = @"
+                        UPDATE Computers SET
+                            User = $user,
+                            Branch = $branch,
+                            Office = $office,
+                            WindowsVersion = $windowsVersion,
+                            ActivationStatus = $activationStatus,
+                            LicenseExpiry = $licenseExpiry,
+                            IPAddress = $ipAddress,
+                            MACAddress = $macAddress,
+                            Processor = $processor,
+                            Monitors = $monitors,
+                            Mouse = $mouse,
+                            Keyboard = $keyboard,
+                            OfficeStatus = $officeStatus,
+                            OfficeLicenseName = $officeLicenseName,
+                            Memory = $memory,
+                            SubnetMask = $subnetMask,
+                            Gateway = $gateway,
+                            DNSServers = $dnsServers,
+                            LastChecked = $lastChecked,
+                            Printers = $printers,
+                            AntivirusName = $antivirusName,
+                            AntivirusVersion = $antivirusVersion,
+                            AntivirusLicenseExpiry = $antivirusLicenseExpiry,
+                            Motherboard = $motherboard,
+                            BIOSVersion = $biosVersion,
+                            VideoCard = $videoCard,
+                            VideoCardMemory = $videoCardMemory,
+                            VideoCardDriver = $videoCardDriver,
+                            Disks = $disks,
+                            SSID = $ssid,
+                            InventoryNumber = $inventoryNumber
+                        WHERE Id = $id";
 
-                await command.ExecuteNonQueryAsync();
+                    updateCommand.Parameters.AddWithValue("$id", existingId);
+                    updateCommand.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$office", computer.Office ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$windowsVersion", computer.WindowsVersion ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$activationStatus", computer.ActivationStatus ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$licenseExpiry", computer.LicenseExpiry ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$ipAddress", computer.IPAddress ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$macAddress", computer.MACAddress ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$processor", computer.Processor ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$monitors", computer.Monitors ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$mouse", computer.Mouse ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$keyboard", computer.Keyboard ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$officeStatus", computer.OfficeStatus ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$officeLicenseName", computer.OfficeLicenseName ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$memory", computer.Memory ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$subnetMask", computer.SubnetMask ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$gateway", computer.Gateway ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$dnsServers", computer.DNSServers ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$lastChecked", computer.LastChecked ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$printers", computer.Printers ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$antivirusName", computer.AntivirusName ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$antivirusVersion", computer.AntivirusVersion ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$antivirusLicenseExpiry", computer.AntivirusLicenseExpiry ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$motherboard", computer.Motherboard ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$biosVersion", computer.BIOSVersion ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$videoCard", computer.VideoCard ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$videoCardMemory", computer.VideoCardMemory ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$videoCardDriver", computer.VideoCardDriver ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$disks", computer.Disks ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$ssid", computer.SSID ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$inventoryNumber", computer.InventoryNumber ?? (object)DBNull.Value);
+
+                    await updateCommand.ExecuteNonQueryAsync();
+                    Log($"Updated computer with Id={existingId}, Name={computer.Name}");
+                }
+                else
+                {
+                    // Вставляем новую запись
+                    var insertCommand = connection.CreateCommand();
+                    insertCommand.CommandText = @"
+                        INSERT INTO Computers (
+                            Name, User, Branch, Office, WindowsVersion, ActivationStatus, LicenseExpiry, 
+                            IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, 
+                            OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked, Printers,
+                            AntivirusName, AntivirusVersion, AntivirusLicenseExpiry, Motherboard, BIOSVersion,
+                            VideoCard, VideoCardMemory, VideoCardDriver, Disks, SSID, InventoryNumber
+                        ) VALUES (
+                            $name, $user, $branch, $office, $windowsVersion, $activationStatus, $licenseExpiry, 
+                            $ipAddress, $macAddress, $processor, $monitors, $mouse, $keyboard, $officeStatus, 
+                            $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked, $printers,
+                            $antivirusName, $antivirusVersion, $antivirusLicenseExpiry, $motherboard, $biosVersion,
+                            $videoCard, $videoCardMemory, $videoCardDriver, $disks, $ssid, $inventoryNumber
+                        )";
+
+                    insertCommand.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$office", computer.Office ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$windowsVersion", computer.WindowsVersion ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$activationStatus", computer.ActivationStatus ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$licenseExpiry", computer.LicenseExpiry ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$ipAddress", computer.IPAddress ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$macAddress", computer.MACAddress ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$processor", computer.Processor ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$monitors", computer.Monitors ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$mouse", computer.Mouse ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$keyboard", computer.Keyboard ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$officeStatus", computer.OfficeStatus ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$officeLicenseName", computer.OfficeLicenseName ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$memory", computer.Memory ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$subnetMask", computer.SubnetMask ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$gateway", computer.Gateway ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$dnsServers", computer.DNSServers ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$lastChecked", computer.LastChecked ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$printers", computer.Printers ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$antivirusName", computer.AntivirusName ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$antivirusVersion", computer.AntivirusVersion ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$antivirusLicenseExpiry", computer.AntivirusLicenseExpiry ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$motherboard", computer.Motherboard ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$biosVersion", computer.BIOSVersion ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$videoCard", computer.VideoCard ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$videoCardMemory", computer.VideoCardMemory ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$videoCardDriver", computer.VideoCardDriver ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$disks", computer.Disks ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$ssid", computer.SSID ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$inventoryNumber", computer.InventoryNumber ?? (object)DBNull.Value);
+
+                    await insertCommand.ExecuteNonQueryAsync();
+                    Log($"Inserted new computer: Name={computer.Name}");
+                }
             }
             catch (Exception ex)
             {
-                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: Error in SaveComputerAsync: {ex.Message}\n{ex.StackTrace}\n");
+                Log($"Error in SaveComputerAsync: {ex.Message}\n{ex.StackTrace}");
                 throw;
             }
         }
@@ -133,10 +247,33 @@ namespace InventoryPC.Services
                     Gateway = reader.IsDBNull(18) ? null : reader.GetString(18),
                     DNSServers = reader.IsDBNull(19) ? null : reader.GetString(19),
                     LastChecked = reader.IsDBNull(20) ? null : reader.GetString(20),
-                    Printers = reader.IsDBNull(21) ? null : reader.GetString(21)
+                    Printers = reader.IsDBNull(21) ? null : reader.GetString(21),
+                    AntivirusName = reader.IsDBNull(22) ? null : reader.GetString(22),
+                    AntivirusVersion = reader.IsDBNull(23) ? null : reader.GetString(23),
+                    AntivirusLicenseExpiry = reader.IsDBNull(24) ? null : reader.GetString(24),
+                    Motherboard = reader.IsDBNull(25) ? null : reader.GetString(25),
+                    BIOSVersion = reader.IsDBNull(26) ? null : reader.GetString(26),
+                    VideoCard = reader.IsDBNull(27) ? null : reader.GetString(27),
+                    VideoCardMemory = reader.IsDBNull(28) ? null : reader.GetString(28),
+                    VideoCardDriver = reader.IsDBNull(29) ? null : reader.GetString(29),
+                    Disks = reader.IsDBNull(30) ? null : reader.GetString(30),
+                    SSID = reader.IsDBNull(31) ? null : reader.GetString(31),
+                    InventoryNumber = reader.IsDBNull(32) ? null : reader.GetString(32)
                 });
             }
             return computers;
+        }
+
+        private void Log(string message)
+        {
+            try
+            {
+                File.AppendAllText(_logPath, $"{DateTime.Now}: {message}\n", System.Text.Encoding.UTF8);
+            }
+            catch
+            {
+                // Игнорируем ошибки логирования
+            }
         }
     }
 }

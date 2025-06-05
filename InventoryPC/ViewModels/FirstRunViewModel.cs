@@ -1,11 +1,10 @@
-﻿using InventoryPC.Models;
-using InventoryPC.Services;
-using System;
-using System.ComponentModel;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Navigation;
+using InventoryPC.Models;
+using InventoryPC.Services;
+using System.ComponentModel;
 
 namespace InventoryPC.ViewModels
 {
@@ -15,6 +14,7 @@ namespace InventoryPC.ViewModels
         private readonly DataService _dataService = new DataService();
         private readonly string _logPath = @"C:\Inventory\log.txt";
         private string? _office;
+        private string? _inventoryNumber;
         private readonly Computer _computer;
         private bool _isLoading;
         private double _progressValue;
@@ -26,6 +26,16 @@ namespace InventoryPC.ViewModels
             {
                 _office = value;
                 OnPropertyChanged(nameof(Office));
+            }
+        }
+
+        public string? InventoryNumber
+        {
+            get => _inventoryNumber;
+            set
+            {
+                _inventoryNumber = value;
+                OnPropertyChanged(nameof(InventoryNumber));
             }
         }
 
@@ -49,18 +59,36 @@ namespace InventoryPC.ViewModels
             }
         }
 
-        public ICommand SaveCommand { get; }
-        public ICommand SkipCommand { get; }
+        public AsyncRelayCommand SaveCommand { get; }
+        public AsyncRelayCommand SkipCommand { get; }
 
         public FirstRunViewModel()
         {
             _computer = new Computer
             {
-                Name = System.Environment.MachineName ?? "Unknown",
-                User = System.Environment.UserName ?? "Unknown"
+                Name = Environment.MachineName ?? "Unknown",
+                User = Environment.UserName ?? "Unknown"
             };
             SaveCommand = new AsyncRelayCommand(SaveAsync);
             SkipCommand = new AsyncRelayCommand(SkipAsync);
+
+            // Попробуем получить инвентарный номер автоматически
+            InitializeInventoryNumberAsync();
+        }
+
+        private async void InitializeInventoryNumberAsync()
+        {
+            try
+            {
+                var progress = new Progress<int>(_ => { });
+                var collectedData = await _dataService.CollectDataAsync(progress);
+                InventoryNumber = collectedData.InventoryNumber != "Unknown" ? collectedData.InventoryNumber : "";
+                Log($"Initialized inventory number: {InventoryNumber}");
+            }
+            catch (Exception ex)
+            {
+                Log($"Error initializing inventory number: {ex.Message}");
+            }
         }
 
         private async Task SaveAsync()
@@ -70,14 +98,14 @@ namespace InventoryPC.ViewModels
                 if (!string.IsNullOrWhiteSpace(Office))
                 {
                     _computer.Office = Office;
+                    _computer.InventoryNumber = InventoryNumber;
                     IsLoading = true;
                     ProgressValue = 0;
-                    // Собираем данные
                     var progress = new Progress<int>(value => ProgressValue = value);
                     var collectedData = await _dataService.CollectDataAsync(progress);
                     _computer.UpdateFromCollectedData(collectedData);
                     await _dbService.SaveComputerAsync(_computer);
-                    Log($"Saved Office: {_computer.Office} and full data for PC: {_computer.Name}");
+                    Log($"Saved Office: {_computer.Office}, InventoryNumber: {_computer.InventoryNumber} and full data for PC: {_computer.Name}");
                     NavigateToMainPage();
                 }
                 else
@@ -100,14 +128,14 @@ namespace InventoryPC.ViewModels
             try
             {
                 _computer.Office = "Не определён";
+                _computer.InventoryNumber = InventoryNumber ?? "Не указан";
                 IsLoading = true;
                 ProgressValue = 0;
-                // Собираем данные
                 var progress = new Progress<int>(value => ProgressValue = value);
                 var collectedData = await _dataService.CollectDataAsync(progress);
                 _computer.UpdateFromCollectedData(collectedData);
                 await _dbService.SaveComputerAsync(_computer);
-                Log($"Skipped Office, set to 'Не определён' and saved full data for PC: {_computer.Name}");
+                Log($"Skipped Office, set to 'Не определён', InventoryNumber: {_computer.InventoryNumber} and saved full data for PC: {_computer.Name}");
                 NavigateToMainPage();
             }
             catch (Exception ex)
@@ -132,7 +160,7 @@ namespace InventoryPC.ViewModels
         {
             try
             {
-                System.IO.File.AppendAllText(_logPath, $"{System.DateTime.Now}: {message}\n", System.Text.Encoding.UTF8);
+                System.IO.File.AppendAllText(_logPath, $"{DateTime.Now}: {message}\n", System.Text.Encoding.UTF8);
             }
             catch
             {

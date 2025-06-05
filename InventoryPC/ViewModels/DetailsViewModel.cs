@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
-using System.Windows.Input;
+using System.Windows;
+using System.Windows.Navigation;
 using InventoryPC.Models;
 using InventoryPC.Services;
 
@@ -9,6 +10,7 @@ namespace InventoryPC.ViewModels
     {
         private readonly DatabaseService _dbService = new DatabaseService();
         private Computer? _computer;
+        private readonly string _logPath = @"C:\Inventory\log.txt";
 
         public Computer? Computer
         {
@@ -20,33 +22,60 @@ namespace InventoryPC.ViewModels
             }
         }
 
-        public ICommand NavigateBackCommand { get; }
-        public ICommand SaveComputerCommand { get; }
+        public AsyncRelayCommand NavigateBackCommand { get; }
+        public AsyncRelayCommand SaveCommand { get; }
 
         public DetailsViewModel()
         {
-            NavigateBackCommand = new RelayCommand<object?>(_ => NavigateBack());
-            SaveComputerCommand = new AsyncRelayCommand(SaveComputerAsync);
+            NavigateBackCommand = new AsyncRelayCommand(NavigateBackAsync);
+            SaveCommand = new AsyncRelayCommand(SaveAsync);
         }
 
         public void SetComputer(Computer? computer)
         {
             Computer = computer;
+            Log($"Set computer: Id={computer?.Id}, Name={computer?.Name}");
         }
 
-        private void NavigateBack()
+        private async Task NavigateBackAsync()
         {
-            if (App.Current.MainWindow is MainWindow mainWindow)
+            if (Application.Current.MainWindow is MainWindow mainWindow)
             {
                 mainWindow.MainFrame.Navigate(new System.Uri("Views/MainPage.xaml", UriKind.Relative));
             }
         }
 
-        private async Task SaveComputerAsync()
+        private async Task SaveAsync()
         {
             if (Computer != null)
             {
-                await _dbService.SaveComputerAsync(Computer);
+                try
+                {
+                    Log($"Saving computer: Id={Computer.Id}, Name={Computer.Name}, Office={Computer.Office}, InventoryNumber={Computer.InventoryNumber}");
+                    await _dbService.SaveComputerAsync(Computer);
+                    Log($"Saved computer: Id={Computer.Id}, Name={Computer.Name}");
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error saving computer: {ex.Message}\n{ex.StackTrace}");
+                    MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                Log("SaveAsync: Computer is null");
+            }
+        }
+
+        private void Log(string message)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(_logPath, $"{DateTime.Now}: {message}\n", System.Text.Encoding.UTF8);
+            }
+            catch
+            {
+                // Игнорируем ошибки логирования
             }
         }
 
