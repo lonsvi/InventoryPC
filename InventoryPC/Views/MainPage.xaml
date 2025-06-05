@@ -14,18 +14,26 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="10">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10">
+                <TextBlock Text="Поиск:" Foreground="White" VerticalAlignment="Center" Margin="5"/>
+                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150" Margin="5"/>
+                <TextBlock Text="Филиал:" Foreground="White" VerticalAlignment="Center" Margin="5"/>
+                <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}" Width="150" Margin="5"/>
+                <CheckBox Content="Лицензии истекают (меньше 30 дней)" IsChecked="{Binding ExpiringLicensesOnly}" Foreground="White" VerticalAlignment="Center" Margin="10,5"/>
+            </StackPanel>
             <Button Content="Обновить" Command="{Binding RefreshCommand}" Width="100" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}"/>
             <Button Content="Экспорт в CSV" Command="{Binding ExportToCsvCommand}" Width="100" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}"/>
         </StackPanel>
-        <ProgressBar Grid.Row="1" Value="{Binding ProgressValue}" 
+        <ProgressBar Grid.Row="2" Value="{Binding ProgressValue}" 
                      Visibility="{Binding IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}" 
                      Minimum="0" Maximum="100" Height="20" Margin="10"/>
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding Computers}" Margin="10">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

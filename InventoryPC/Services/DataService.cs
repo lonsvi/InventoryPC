@@ -144,6 +144,12 @@ namespace InventoryPC.Services
             computer.InventoryNumber = ParseInventoryNumber(invOutput);
             Log($"Parsed InventoryNumber: {computer.InventoryNumber}");
 
+            // Шаг 11: Принтеры (97%)
+            progress.Report(97);
+            string printerOutput = await RunCommandAsync("wmic printer get Name,PortName");
+            Log("wmic printer output: " + Truncate(printerOutput, 1000));
+            computer.Printers = ParsePrinters(printerOutput);
+
             // Завершение (100%)
             progress.Report(100);
             computer.LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -430,28 +436,14 @@ namespace InventoryPC.Services
 
         private string ParseOfficeStatus(string output)
         {
-            Log($"Raw office output: {Truncate(output, 2000)}");
             if (Regex.IsMatch(output, @"LICENSE STATUS:.*LICENSED", RegexOptions.IgnoreCase))
-            {
-                Log("Parsed office status: Licensed");
                 return "Licensed";
-            }
             if (Regex.IsMatch(output, @"LICENSE STATUS:.*OOB_GRACE", RegexOptions.IgnoreCase))
-            {
-                Log("Parsed office status: Grace Period (Cracked)");
                 return "Grace Period (Cracked)";
-            }
             if (Regex.IsMatch(output, @"LICENSE STATUS:.*NOT LICENSED", RegexOptions.IgnoreCase))
-            {
-                Log("Parsed office status: Not Licensed");
                 return "Not Licensed";
-            }
             if (string.IsNullOrEmpty(output) || Regex.IsMatch(output, @"ERROR|не найдено|file not found", RegexOptions.IgnoreCase))
-            {
-                Log("Parsed office status: Office Not Installed");
                 return "Office Not Installed";
-            }
-            Log("Parsed office status: Unknown");
             return "Unknown";
         }
 
@@ -591,8 +583,26 @@ namespace InventoryPC.Services
 
         private string ParsePrinters(string output)
         {
-            Log("Printers not collected");
-            return string.Empty;
+            Log($"Raw printer output: {Truncate(output, 1000)}");
+            Regex regex = new Regex(@"Name\s+(.+?)\s+PortName\s+(.+?)(?:\r\n|$)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            var matches = regex.Matches(output);
+            if (matches.Count > 0)
+            {
+                var printers = matches.Cast<Match>()
+                    .Select(m =>
+                    {
+                        string name = m.Groups[1].Value.Trim();
+                        string port = m.Groups[2].Value.Trim();
+                        string ip = port.StartsWith("IP_") ? port.Substring(3) : "Local";
+                        return $"{name} (IP: {ip}, Status: Unknown, Inventory: Not Assigned)";
+                    })
+                    .Where(p => !string.IsNullOrEmpty(p));
+                string result = string.Join("; ", printers);
+                Log($"Parsed printers: {result}");
+                return string.IsNullOrEmpty(result) ? "None" : result;
+            }
+            Log("No printers parsed");
+            return "None";
         }
 
         private void Log(string message)

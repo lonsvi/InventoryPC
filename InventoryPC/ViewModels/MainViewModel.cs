@@ -20,6 +20,88 @@ namespace InventoryPC.ViewModels
         private ObservableCollection<Computer>? _computers;
         private double _progressValue;
         private bool _isProgressVisible;
+        private string? _searchText;
+        private string? _selectedBranch;
+        private bool _expiringLicensesOnly;
+        private List<string> _branches = new List<string> { "Все филиалы", "Писарева", "Гоголя", "Р. Люксембург" };
+
+        public string? SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged(nameof(SearchText));
+                FilterComputers();
+            }
+        }
+
+        public string? SelectedBranch
+        {
+            get => _selectedBranch;
+            set
+            {
+                _selectedBranch = value;
+                OnPropertyChanged(nameof(SelectedBranch));
+                FilterComputers();
+            }
+        }
+
+        public bool ExpiringLicensesOnly
+        {
+            get => _expiringLicensesOnly;
+            set
+            {
+                _expiringLicensesOnly = value;
+                OnPropertyChanged(nameof(ExpiringLicensesOnly));
+                FilterComputers();
+            }
+        }
+
+        public List<string> Branches
+        {
+            get => _branches;
+            set
+            {
+                _branches = value;
+                OnPropertyChanged(nameof(Branches));
+            }
+        }
+
+        private async void FilterComputers()
+        {
+            var computers = await _dbService.GetComputersAsync();
+            var filtered = computers.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(SearchText))
+            {
+                filtered = filtered.Where(c =>
+                    (c.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (c.IPAddress?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            if (SelectedBranch != "Все филиалы" && !string.IsNullOrEmpty(SelectedBranch))
+            {
+                filtered = filtered.Where(c => c.Branch == SelectedBranch);
+            }
+
+            if (ExpiringLicensesOnly)
+            {
+                filtered = filtered.Where(c =>
+                {
+                    bool hasExpiring = false;
+                    if (DateTime.TryParse(c.LicenseExpiry, out DateTime winExpiry) && winExpiry <= DateTime.Now.AddDays(30))
+                        hasExpiring = true;
+                    if (DateTime.TryParse(c.OfficeLicenseName, out DateTime officeExpiry) && officeExpiry <= DateTime.Now.AddDays(30))
+                        hasExpiring = true;
+                    if (DateTime.TryParse(c.AntivirusLicenseExpiry, out DateTime avExpiry) && avExpiry <= DateTime.Now.AddDays(30))
+                        hasExpiring = true;
+                    return hasExpiring;
+                });
+            }
+
+            Computers = new ObservableCollection<Computer>(filtered);
+        }
 
         public ObservableCollection<Computer>? Computers
         {
@@ -61,6 +143,7 @@ namespace InventoryPC.ViewModels
             RefreshCommand = new AsyncRelayCommand(RefreshAsync);
             NavigateToDetailsCommand = new RelayCommand<Computer>(NavigateToDetails);
             ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync);
+            SelectedBranch = "Все филиалы";
             LoadDataAsync();
         }
 

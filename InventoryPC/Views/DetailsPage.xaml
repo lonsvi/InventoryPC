@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:InventoryPC.ViewModels"
+      xmlns:local="clr-namespace:InventoryPC.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="1000">
     <Page.DataContext>
@@ -39,8 +40,22 @@
                     <TextBox Text="{Binding Computer.InventoryNumber, UpdateSourceTrigger=PropertyChanged}" Width="200" Margin="0,5"/>
                     <TextBlock Text="Версия Windows:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.WindowsVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
-                    <TextBlock Text="Статус активации:" Foreground="White" FontSize="14" Margin="0,5"/>
+
+                    <!-- Новый блок для статуса активации -->
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Статус активации:" Foreground="White" FontSize="14"/>
+                        <Ellipse Width="10" Height="10" Margin="5,0" VerticalAlignment="Center">
+                            <Ellipse.Fill>
+                                <Binding Path="Computer.ActivationStatus">
+                                    <Binding.Converter>
+                                        <local:StatusToColorConverter/>
+                                    </Binding.Converter>
+                                </Binding>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </StackPanel>
                     <TextBlock Text="{Binding Computer.ActivationStatus, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+
                     <TextBlock Text="Срок лицензии:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.LicenseExpiry, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
                     <TextBlock Text="IP-адрес:" Foreground="White" FontSize="14" Margin="0,5"/>
@@ -73,16 +88,44 @@
                     <TextBlock Text="{Binding Computer.Mouse, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
                     <TextBlock Text="Клавиатура:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.Keyboard, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
-                    <TextBlock Text="Статус Office:" Foreground="White" FontSize="14" Margin="0,5"/>
+
+                    <!-- Новый блок для статуса Office -->
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Статус Office:" Foreground="White" FontSize="14"/>
+                        <Ellipse Width="10" Height="10" Margin="5,0" VerticalAlignment="Center">
+                            <Ellipse.Fill>
+                                <Binding Path="Computer.OfficeStatus">
+                                    <Binding.Converter>
+                                        <local:StatusToColorConverter/>
+                                    </Binding.Converter>
+                                </Binding>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </StackPanel>
                     <TextBlock Text="{Binding Computer.OfficeStatus, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+
                     <TextBlock Text="Лицензия Office:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.OfficeLicenseName, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5" TextWrapping="Wrap"/>
                     <TextBlock Text="Антивирус:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.AntivirusName, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
                     <TextBlock Text="Версия антивируса:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.AntivirusVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
-                    <TextBlock Text="Срок лицензии антивируса:" Foreground="White" FontSize="14" Margin="0,5"/>
+
+                    <!-- Новый блок для срока лицензии антивируса -->
+                    <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <TextBlock Text="Срок лицензии антивируса:" Foreground="White" FontSize="14"/>
+                        <Ellipse Width="10" Height="10" Margin="5,0" VerticalAlignment="Center">
+                            <Ellipse.Fill>
+                                <Binding Path="Computer.AntivirusLicenseExpiry">
+                                    <Binding.Converter>
+                                        <local:StatusToColorConverter/>
+                                    </Binding.Converter>
+                                </Binding>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                    </StackPanel>
                     <TextBlock Text="{Binding Computer.AntivirusLicenseExpiry, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
+
                     <TextBlock Text="ОЗУ:" Foreground="White" FontSize="14" Margin="0,5"/>
                     <TextBlock Text="{Binding Computer.Memory, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" Margin="0,5"/>
                     <TextBlock Text="Маска подсети:" Foreground="White" FontSize="14" Margin="0,5"/>
