@@ -28,16 +28,17 @@ namespace InventoryPC
                 var computers = await _dbService.GetComputersAsync();
                 var currentPcName = Environment.MachineName ?? "Unknown";
                 var currentPc = computers.FirstOrDefault(c => c.Name == currentPcName);
-
-                if (currentPc == null || string.IsNullOrWhiteSpace(currentPc.Office))
                 {
-                    Log($"Navigating to FirstRunPage: PC={currentPcName}, Office={(currentPc?.Office ?? "null")}");
-                    MainFrame.Navigate(new System.Uri("Views/FirstRunPage.xaml", UriKind.Relative));
-                }
-                else
-                {
-                    Log($"Navigating to MainPage: PC={currentPcName}, Office={currentPc.Office}");
-                    MainFrame.Navigate(new System.Uri("Views/MainPage.xaml", UriKind.Relative));
+                    try
+                    {
+                        Log($"MainWindow_Loaded started for PC: {Environment.MachineName}");
+                        MainFrame.Navigate(new System.Uri("Views/LoginPage.xaml", UriKind.Relative));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"Error in MainWindow_Loaded: {ex.Message}\n{ex.StackTrace}");
+                        MessageBox.Show($"Ошибка при загрузке: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
             catch (Exception ex)

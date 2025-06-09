@@ -13,6 +13,7 @@ using System.Windows.Input;
 
 namespace InventoryPC.ViewModels
 {
+
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly DataService _dataService = new DataService();
@@ -24,6 +25,8 @@ namespace InventoryPC.ViewModels
         private string? _selectedBranch;
         private bool _expiringLicensesOnly;
         private List<string> _branches = new List<string> { "Все филиалы", "Писарева", "Гоголя", "Р. Люксембург" };
+
+
 
         public string? SearchText
         {
@@ -71,6 +74,13 @@ namespace InventoryPC.ViewModels
         private async void FilterComputers()
         {
             var computers = await _dbService.GetComputersAsync();
+            if (App.CurrentUser?.Role != "Admin")
+            {
+                // Ограничиваем доступ для User/Guest: только свой ПК
+                var currentPcName = Environment.MachineName ?? "Unknown";
+                computers = computers.Where(c => c.Name == currentPcName).ToList();
+            }
+
             var filtered = computers.AsEnumerable();
 
             if (!string.IsNullOrEmpty(SearchText))
@@ -139,6 +149,26 @@ namespace InventoryPC.ViewModels
 
         public MainViewModel()
         {
+            if (App.CurrentUser == null)
+            {
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: No user authenticated, redirecting to LoginPage.\n");
+                NavigateToLoginPage();
+                return;
+            }
+
+            Computers = new ObservableCollection<Computer>();
+            RefreshCommand = new AsyncRelayCommand(RefreshAsync);
+            NavigateToDetailsCommand = new RelayCommand<Computer>(NavigateToDetails);
+            ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync, () => App.CurrentUser?.Role == "Admin");
+            SelectedBranch = "Все филиалы";
+            LoadDataAsync();
+            if (App.CurrentUser == null)
+            {
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: No user authenticated, redirecting to LoginPage.\n");
+                NavigateToLoginPage();
+                return;
+            }
+
             Computers = new ObservableCollection<Computer>();
             RefreshCommand = new AsyncRelayCommand(RefreshAsync);
             NavigateToDetailsCommand = new RelayCommand<Computer>(NavigateToDetails);
@@ -147,9 +177,23 @@ namespace InventoryPC.ViewModels
             LoadDataAsync();
         }
 
+        private void NavigateToLoginPage()
+        {
+            if (App.Current.MainWindow is MainWindow mainWindow)
+            {
+                mainWindow.MainFrame.Navigate(new System.Uri("Views/LoginPage.xaml", UriKind.Relative));
+            }
+        }
+
         private async void LoadDataAsync()
         {
             var computers = await _dbService.GetComputersAsync();
+            if (App.CurrentUser?.Role != "Admin")
+            {
+                // Ограничиваем доступ для User/Guest: только свой ПК
+                var currentPcName = Environment.MachineName ?? "Unknown";
+                computers = computers.Where(c => c.Name == currentPcName).ToList();
+            }
             Computers = new ObservableCollection<Computer>(computers);
         }
 

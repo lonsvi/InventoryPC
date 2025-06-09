@@ -70,7 +70,7 @@ namespace InventoryPC.ViewModels
                 User = Environment.UserName ?? "Unknown"
             };
             SaveCommand = new AsyncRelayCommand(SaveAsync);
-            SkipCommand = new AsyncRelayCommand(SkipAsync);
+            SkipCommand = new AsyncRelayCommand(SkipAsyncMethod); // Изменено имя метода
 
             // Попробуем получить инвентарный номер автоматически
             InitializeInventoryNumberAsync();
@@ -105,17 +105,17 @@ namespace InventoryPC.ViewModels
                     var collectedData = await _dataService.CollectDataAsync(progress);
                     _computer.UpdateFromCollectedData(collectedData);
                     await _dbService.SaveComputerAsync(_computer);
-                    Log($"Saved Office: {_computer.Office}, InventoryNumber: {_computer.InventoryNumber} and full data for PC: {_computer.Name}");
+                    Log($"User {App.CurrentUser?.Login ?? "Unknown"} (Role: {App.CurrentUser?.Role ?? "None"}) saved Office: {_computer.Office}, InventoryNumber: {_computer.InventoryNumber} and full data for PC: {_computer.Name}");
                     NavigateToMainPage();
                 }
                 else
                 {
-                    Log("SaveAsync: Office is empty, no save performed");
+                    Log($"User {App.CurrentUser?.Login ?? "Unknown"} (Role: {App.CurrentUser?.Role ?? "None"}) attempted SaveAsync: Office is empty, no save performed");
                 }
             }
             catch (Exception ex)
             {
-                Log($"Error in SaveAsync: {ex.Message}\n{ex.StackTrace}");
+                Log($"Error in SaveAsync for user {App.CurrentUser?.Login ?? "Unknown"}: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
@@ -123,7 +123,7 @@ namespace InventoryPC.ViewModels
             }
         }
 
-        private async Task SkipAsync()
+        private async Task SkipAsyncMethod() // Изменено имя метода
         {
             try
             {
@@ -140,7 +140,7 @@ namespace InventoryPC.ViewModels
             }
             catch (Exception ex)
             {
-                Log($"Error in SkipAsync: {ex.Message}\n{ex.StackTrace}");
+                Log($"Error in SkipAsyncMethod: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {

@@ -24,6 +24,18 @@ namespace InventoryPC.Services
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = @"
+   CREATE TABLE IF NOT EXISTS                    Users (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Login TEXT NOT NULL UNIQUE,
+                    PasswordHash TEXT NOT NULL,
+                    Role TEXT NOT NULL -- Admin, User
+                );
+                CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
+                -- Добавляем тестового админа (пароль: admin123)
+                INSERT OR IGNORE Users INTO (Login, PasswordHash, Role) 
+                VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin');
+";
+            command.CommandText = @"
                 CREATE TABLE IF NOT EXISTS Computers (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Name TEXT,
@@ -114,6 +126,7 @@ namespace InventoryPC.Services
                             SSID = $ssid,
                             InventoryNumber = $inventoryNumber
                         WHERE Id = $id";
+
 
                     updateCommand.Parameters.AddWithValue("$id", existingId);
                     updateCommand.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
@@ -263,7 +276,34 @@ namespace InventoryPC.Services
             }
             return computers;
         }
-
+        public async Task<User?> GetUserByLoginAsync(string login)
+        {
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT Id, Login, PasswordHash, Role FROM Users WHERE Login = $login";
+                command.Parameters.AddWithValue("$login", login);
+                using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    return new User
+                    {
+                        Id = reader.GetInt32(0),
+                        Login = reader.GetString(1),
+                        PasswordHash = reader.GetString(2),
+                        Role = reader.GetString(3)
+                    };
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Log($"Error in GetUserByLoginAsync: {ex.Message}\n{ex.StackTrace}");
+                return null;
+            }
+        }
         private void Log(string message)
         {
             try
