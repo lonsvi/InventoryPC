@@ -9,7 +9,7 @@ namespace InventoryPC.Services
 {
     public class DatabaseService
     {
-        private readonly string _connectionString = @"Data Source=C:\Inventory\inventory.db";
+        private readonly string _connectionString = @"Data Source=\\192.168.2.226\admin-soft\! тесты !\inventory.db";
         private readonly string _logPath = @"C:\Inventory\log.txt";
 
         public DatabaseService()
@@ -20,59 +20,70 @@ namespace InventoryPC.Services
 
         private void InitializeDatabase()
         {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-   CREATE TABLE IF NOT EXISTS                    Users (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Login TEXT NOT NULL UNIQUE,
-                    PasswordHash TEXT NOT NULL,
-                    Role TEXT NOT NULL -- Admin, User
-                );
-                CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
-                -- Добавляем тестового админа (пароль: admin123)
-                INSERT OR IGNORE Users INTO (Login, PasswordHash, Role) 
-                VALUES ('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'Admin');
-";
-            command.CommandText = @"
-                CREATE TABLE IF NOT EXISTS Computers (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    Name TEXT,
-                    User TEXT,
-                    Branch TEXT,
-                    Office TEXT,
-                    WindowsVersion TEXT,
-                    ActivationStatus TEXT,
-                    LicenseExpiry TEXT,
-                    IPAddress TEXT,
-                    MACAddress TEXT,
-                    Processor TEXT,
-                    Monitors TEXT,
-                    Mouse TEXT,
-                    Keyboard TEXT,
-                    OfficeStatus TEXT,
-                    OfficeLicenseName TEXT,
-                    Memory TEXT,
-                    SubnetMask TEXT,
-                    Gateway TEXT,
-                    DNSServers TEXT,
-                    LastChecked TEXT,
-                    Printers TEXT,
-                    AntivirusName TEXT,
-                    AntivirusVersion TEXT,
-                    AntivirusLicenseExpiry TEXT,
-                    Motherboard TEXT,
-                    BIOSVersion TEXT,
-                    VideoCard TEXT,
-                    VideoCardMemory TEXT,
-                    VideoCardDriver TEXT,
-                    Disks TEXT,
-                    SSID TEXT,
-                    InventoryNumber TEXT
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS idx_computers_name ON Computers(Name);";
-            command.ExecuteNonQuery();
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                    -- Таблица Users
+                    CREATE TABLE IF NOT EXISTS Users (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Login TEXT NOT NULL UNIQUE,
+                        PasswordHash TEXT NOT NULL,
+                        Role TEXT NOT NULL
+                    );
+                    CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
+                    -- Добавляем или обновляем админа (пароль: qw1234)
+                    INSERT OR REPLACE INTO Users (Login, PasswordHash, Role) 
+                    VALUES ('admin', 'c9e7c568fe02d752e050b57b386c3b5b2ae1b0a375ed8b9e2b7a81ce3e0ab', 'Admin');
+
+                    -- Таблица Computers
+                    CREATE TABLE IF NOT EXISTS Computers (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Name TEXT,
+                        User TEXT,
+                        Branch TEXT,
+                        Office TEXT,
+                        WindowsVersion TEXT,
+                        ActivationStatus TEXT,
+                        LicenseExpiry TEXT,
+                        IPAddress TEXT,
+                        MACAddress TEXT,
+                        Processor TEXT,
+                        Monitors TEXT,
+                        Mouse TEXT,
+                        Keyboard TEXT,
+                        OfficeStatus TEXT,
+                        OfficeLicenseName TEXT,
+                        Memory TEXT,
+                        SubnetMask TEXT,
+                        Gateway TEXT,
+                        DNSServers TEXT,
+                        LastChecked TEXT,
+                        Printers TEXT,
+                        AntivirusName TEXT,
+                        AntivirusVersion TEXT,
+                        AntivirusLicenseExpiry TEXT,
+                        Motherboard TEXT,
+                        BIOSVersion TEXT,
+                        VideoCard TEXT,
+                        VideoCardMemory TEXT,
+                        VideoCardDriver TEXT,
+                        Disks TEXT,
+                        SSID TEXT,
+                        InventoryNumber TEXT
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS idx_computers_name ON Computers(Name);
+                ";
+                command.ExecuteNonQuery();
+                Log("Database initialized: Created Users and Computers tables, inserted/updated admin with password qw1234.");
+            }
+            catch (Exception ex)
+            {
+                Log($"Error in InitializeDatabase: {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
         }
 
         public async Task SaveComputerAsync(Computer computer)

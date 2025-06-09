@@ -21,14 +21,17 @@ namespace InventoryPC.Services
         {
             try
             {
+                Log($"Authenticating user: {login}");
                 var user = await _dbService.GetUserByLoginAsync(login);
                 if (user == null)
                 {
-                    Log($"Authentication failed: User {login} not found.");
+                    Log($"Authentication failed: User {login} not found in database.");
                     return null;
                 }
 
+                Log($"User found: {login}, Stored hash: {user.PasswordHash}, Role: {user.Role}");
                 string passwordHash = ComputeSHA256Hash(password);
+                Log($"Generated hash for password: {passwordHash}");
                 if (user.PasswordHash == passwordHash)
                 {
                     Log($"Authentication successful for user: {login}, Role: {user.Role}");
@@ -47,6 +50,7 @@ namespace InventoryPC.Services
             }
         }
 
+
         private string ComputeSHA256Hash(string input)
         {
             using SHA256 sha256 = SHA256.Create();
@@ -58,6 +62,10 @@ namespace InventoryPC.Services
                 builder.Append(b.ToString("x2"));
             }
             return builder.ToString();
+        }
+        public string TestHash(string input)
+        {
+            return ComputeSHA256Hash(input);
         }
 
         private void Log(string message)

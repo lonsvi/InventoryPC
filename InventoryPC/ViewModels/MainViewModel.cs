@@ -199,26 +199,49 @@ namespace InventoryPC.ViewModels
 
         private async Task RefreshAsync()
         {
-            IsProgressVisible = true;
-            ProgressValue = 0;
-
-            var progress = new Progress<int>(value => ProgressValue = value);
-            var computer = await _dataService.CollectDataAsync(progress);
-            computer.User = Environment.UserName;
-
-            // Сохраняем Office из существующей записи
-            var currentPcName = Environment.MachineName ?? "Unknown";
-            var existingComputer = (await _dbService.GetComputersAsync())
-                .FirstOrDefault(c => c.Name == currentPcName);
-            if (existingComputer != null && !string.IsNullOrWhiteSpace(existingComputer.Office))
+            try
             {
-                computer.Office = existingComputer.Office;
+                IsProgressVisible = true;
+                ProgressValue = 0;
+
+                var progress = new Progress<int>(value => ProgressValue = value);
+                var computer = await _dataService.CollectDataAsync(progress);
+                computer.User = Environment.UserName;
+
+                // Сохраняем Office из существующей записи
+                var currentPcName = Environment.MachineName ?? "Unknown";
+                var existingComputer = (await _dbService.GetComputersAsync())
+                    .FirstOrDefault(c => c.Name == currentPcName);
+                if (existingComputer != null && !string.IsNullOrWhiteSpace(existingComputer.Office))
+                {
+                    computer.Office = existingComputer.Office;
+                }
+
+                await _dbService.SaveComputerAsync(computer);
+
+                // Фильтруем данные по роли пользователя
+                var computers = await _dbService.GetComputersAsync();
+                if (App.CurrentUser?.Role != "Admin")
+                {
+                    computers = computers.Where(c => c.Name == currentPcName).ToList();
+                }
+                Computers = new ObservableCollection<Computer>(computers);
+
+                // Применяем текущие фильтры
+                FilterComputers();
+
+                File.AppendAllText(@"C:\Inventory\log.txt",
+                    $"{DateTime.Now}: Refreshed data for PC: {currentPcName}, Role: {App.CurrentUser?.Role ?? "None"}, Displayed {Computers.Count} computers\n");
             }
-
-            await _dbService.SaveComputerAsync(computer);
-            Computers = new ObservableCollection<Computer>(await _dbService.GetComputersAsync());
-
-            IsProgressVisible = false;
+            catch (Exception ex)
+            {
+                File.AppendAllText(@"C:\Inventory\log.txt",
+                    $"{DateTime.Now}: Error in RefreshAsync: {ex.Message}\n{ex.StackTrace}\n");
+            }
+            finally
+            {
+                IsProgressVisible = false;
+            }
         }
 
         private async Task ExportToCsvAsync()

@@ -38,9 +38,13 @@ namespace InventoryPC.ViewModels
             if (string.IsNullOrWhiteSpace(Login) || passwordBox == null || string.IsNullOrEmpty(passwordBox.Password))
             {
                 MessageBox.Show("Введите логин и пароль.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                Log("Login attempt failed: Empty login or password.");
+                Log($"Login attempt failed: Empty login or password. Login: {Login}");
                 return;
             }
+
+            // Тест хэша
+            string testHash = _authService.TestHash(passwordBox.Password);
+            Log($"Test hash for password {passwordBox.Password}: {testHash}");
 
             var user = await _authService.AuthenticateAsync(Login, passwordBox.Password);
             if (user != null)
