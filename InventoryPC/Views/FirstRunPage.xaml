@@ -103,7 +103,7 @@
         </Style>
     </Page.Resources>
     <Grid>
-        <Border Background="#23272F" CornerRadius="16" Padding="40" Margin="120">
+        <Border Background="#23272F" CornerRadius="16" Padding="40" Margin="120,120,120,67">
             <Grid>
                 <!-- Основной контент -->
                 <StackPanel x:Name="MainContent" VerticalAlignment="Center" HorizontalAlignment="Center" Width="340"
@@ -152,6 +152,15 @@
                             Margin="0,8,0,0"/>
                     <Button Content="Пропустить?" 
                             Command="{Binding SkipCommand}" 
+                            Height="38"
+                            FontSize="14"
+                            Background="Transparent"
+                            Foreground="#B0B0B0"
+                            BorderThickness="0"
+                            HorizontalAlignment="Center"
+                            Margin="0,8,0,0" Width="339"/>
+                    <Button Content="Вернуться" 
+                            Command="{Binding ReturnToLoginCommand}" 
                             Height="38"
                             FontSize="14"
                             Background="Transparent"

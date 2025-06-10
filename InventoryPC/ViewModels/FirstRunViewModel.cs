@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Navigation;
 using InventoryPC.Models;
 using InventoryPC.Services;
 using System.ComponentModel;
@@ -61,6 +60,7 @@ namespace InventoryPC.ViewModels
 
         public AsyncRelayCommand SaveCommand { get; }
         public AsyncRelayCommand SkipCommand { get; }
+        public AsyncRelayCommand ReturnToLoginCommand { get; }
 
         public FirstRunViewModel()
         {
@@ -70,9 +70,8 @@ namespace InventoryPC.ViewModels
                 User = Environment.UserName ?? "Unknown"
             };
             SaveCommand = new AsyncRelayCommand(SaveAsync);
-            SkipCommand = new AsyncRelayCommand(SkipAsyncMethod); // Изменено имя метода
-
-            // Попробуем получить инвентарный номер автоматически
+            SkipCommand = new AsyncRelayCommand(SkipAsyncMethod);
+            ReturnToLoginCommand = new AsyncRelayCommand(ReturnToLoginAsync);
             InitializeInventoryNumberAsync();
         }
 
@@ -95,6 +94,7 @@ namespace InventoryPC.ViewModels
         {
             try
             {
+                Log($"Starting SaveAsync, App.CurrentUser: {App.CurrentUser?.Login ?? "null"}, Role: {App.CurrentUser?.Role ?? "null"}");
                 if (!string.IsNullOrWhiteSpace(Office))
                 {
                     _computer.Office = Office;
@@ -105,17 +105,26 @@ namespace InventoryPC.ViewModels
                     var collectedData = await _dataService.CollectDataAsync(progress);
                     _computer.UpdateFromCollectedData(collectedData);
                     await _dbService.SaveComputerAsync(_computer);
-                    Log($"User {App.CurrentUser?.Login ?? "Unknown"} (Role: {App.CurrentUser?.Role ?? "None"}) saved Office: {_computer.Office}, InventoryNumber: {_computer.InventoryNumber} and full data for PC: {_computer.Name}");
+                    Log($"Saved Office: {_computer.Office}, InventoryNumber: {_computer.InventoryNumber} for PC: {_computer.Name}");
+
+                    // Устанавливаем гостя, если пользователь не авторизован
+                    if (App.CurrentUser == null)
+                    {
+                        App.CurrentUser = new Models.User { Login = "Guest", Role = "User" };
+                        Log("Set App.CurrentUser to Guest with Role: User");
+                    }
+
+                    Log($"Navigating to MainPage, App.CurrentUser: {App.CurrentUser?.Login}, Role: {App.CurrentUser?.Role}");
                     NavigateToMainPage();
                 }
                 else
                 {
-                    Log($"User {App.CurrentUser?.Login ?? "Unknown"} (Role: {App.CurrentUser?.Role ?? "None"}) attempted SaveAsync: Office is empty, no save performed");
+                    Log($"SaveAsync: Office is empty, no save performed");
                 }
             }
             catch (Exception ex)
             {
-                Log($"Error in SaveAsync for user {App.CurrentUser?.Login ?? "Unknown"}: {ex.Message}\n{ex.StackTrace}");
+                Log($"Error in SaveAsync: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
@@ -123,10 +132,11 @@ namespace InventoryPC.ViewModels
             }
         }
 
-        private async Task SkipAsyncMethod() // Изменено имя метода
+        private async Task SkipAsyncMethod()
         {
             try
             {
+                Log($"Starting SkipAsyncMethod, App.CurrentUser: {App.CurrentUser?.Login ?? "null"}, Role: {App.CurrentUser?.Role ?? "null"}");
                 _computer.Office = "Не определён";
                 _computer.InventoryNumber = InventoryNumber ?? "Не указан";
                 IsLoading = true;
@@ -135,7 +145,16 @@ namespace InventoryPC.ViewModels
                 var collectedData = await _dataService.CollectDataAsync(progress);
                 _computer.UpdateFromCollectedData(collectedData);
                 await _dbService.SaveComputerAsync(_computer);
-                Log($"Skipped Office, set to 'Не определён', InventoryNumber: {_computer.InventoryNumber} and saved full data for PC: {_computer.Name}");
+                Log($"Skipped Office, set to 'Не определён', InventoryNumber: {_computer.InventoryNumber} for PC: {_computer.Name}");
+
+                // Устанавливаем гостя, если пользователь не авторизован
+                if (App.CurrentUser == null)
+                {
+                    App.CurrentUser = new Models.User { Login = "Guest", Role = "User" };
+                    Log("Set App.CurrentUser to Guest with Role: User");
+                }
+
+                Log($"Navigating to MainPage, App.CurrentUser: {App.CurrentUser?.Login}, Role: {App.CurrentUser?.Role}");
                 NavigateToMainPage();
             }
             catch (Exception ex)
@@ -148,11 +167,40 @@ namespace InventoryPC.ViewModels
             }
         }
 
+        private async Task ReturnToLoginAsync()
+        {
+            try
+            {
+                Log("Navigating back to LoginPage from FirstRunPage.");
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    mainWindow.MainFrame.Navigate(new System.Uri("Views/LoginPage.xaml", UriKind.Relative));
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error in ReturnToLoginAsync: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
         private void NavigateToMainPage()
         {
-            if (Application.Current.MainWindow is MainWindow mainWindow)
+            try
             {
-                mainWindow.MainFrame.Navigate(new System.Uri("Views/MainPage.xaml", UriKind.Relative));
+                Log($"Attempting navigation to MainPage.xaml");
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    mainWindow.MainFrame.Navigate(new System.Uri("Views/MainPage.xaml", UriKind.Relative));
+                    Log($"Navigation to MainPage.xaml successful");
+                }
+                else
+                {
+                    Log($"Navigation failed: MainWindow is not available");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error in NavigateToMainPage: {ex.Message}\n{ex.StackTrace}");
             }
         }
 

@@ -1,9 +1,9 @@
 ﻿using InventoryPC.Services;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Threading.Tasks;
 
 namespace InventoryPC.ViewModels
 {
@@ -25,12 +25,14 @@ namespace InventoryPC.ViewModels
 
         public ICommand LoginCommand { get; }
         public ICommand GuestLoginCommand { get; }
+        public ICommand NavigateToFirstRunCommand { get; } // Новая команда
 
         public LoginViewModel()
         {
             _authService = new AuthService(new DatabaseService());
             LoginCommand = new RelayCommand<PasswordBox>(async (pb) => await LoginAsync(pb));
             GuestLoginCommand = new AsyncRelayCommand(GuestLoginAsync);
+            NavigateToFirstRunCommand = new AsyncRelayCommand(NavigateToFirstRunAsync); // Инициализация новой команды
         }
 
         private async Task LoginAsync(PasswordBox passwordBox)
@@ -66,6 +68,20 @@ namespace InventoryPC.ViewModels
             App.CurrentUser = new Models.User { Login = "Guest", Role = "User" };
             Log("Guest login successful.");
             NavigateToMainPage();
+        }
+
+        private async Task NavigateToFirstRunAsync()
+        {
+            Log($"Navigating to FirstRunPage, App.CurrentUser: {App.CurrentUser?.Login ?? "null"}, Role: {App.CurrentUser?.Role ?? "null"}");
+            if (Application.Current.MainWindow is MainWindow mainWindow)
+            {
+                mainWindow.MainFrame.Navigate(new System.Uri("Views/FirstRunPage.xaml", UriKind.Relative));
+                Log("Navigation to FirstRunPage successful");
+            }
+            else
+            {
+                Log("Navigation failed: MainWindow is not available");
+            }
         }
 
         private void NavigateToMainPage()

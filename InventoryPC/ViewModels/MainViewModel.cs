@@ -152,9 +152,10 @@ namespace InventoryPC.ViewModels
 
         public MainViewModel()
         {
+            Log($"MainViewModel constructor started, App.CurrentUser: {App.CurrentUser?.Login ?? "null"}, Role: {App.CurrentUser?.Role ?? "null"}");
             if (App.CurrentUser == null)
             {
-                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: No user authenticated, redirecting to LoginPage.\n");
+                Log("No user authenticated, redirecting to LoginPage.");
                 NavigateToLoginPage();
                 return;
             }
@@ -165,6 +166,18 @@ namespace InventoryPC.ViewModels
             ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync, () => App.CurrentUser?.Role == "Admin");
             SelectedBranch = "Все филиалы";
             LoadDataAsync();
+        }
+
+        private void Log(string message)
+        {
+            try
+            {
+                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: {message}\n", Encoding.UTF8);
+            }
+            catch
+            {
+                // Игнорируем ошибки логирования
+            }
         }
 
         private void NavigateToLoginPage()
@@ -278,10 +291,7 @@ namespace InventoryPC.ViewModels
             }
         }
 
-        private void Log(string message)
-        {
-            File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: {message}\n");
-        }
+       
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
