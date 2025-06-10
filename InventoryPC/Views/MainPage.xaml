@@ -19,16 +19,29 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="10">
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10">
-                <TextBlock Text="Поиск:" Foreground="White" VerticalAlignment="Center" Margin="5"/>
+                <TextBlock VerticalAlignment="Center" Margin="5">
+                    <Run FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="16" Text=""/> <!-- Иконка поиска -->
+                    <Run Text=" Поиск:" Foreground="White"/>
+                </TextBlock>
                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150" Margin="5"/>
                 <TextBlock Text="Филиал:" Foreground="White" VerticalAlignment="Center" Margin="5"/>
                 <ComboBox ItemsSource="{Binding Branches}" SelectedItem="{Binding SelectedBranch}" Width="150" Margin="5"/>
                 <CheckBox Content="Лицензии истекают (меньше 30 дней)" IsChecked="{Binding ExpiringLicensesOnly}" Foreground="White" VerticalAlignment="Center" Margin="10,5"/>
             </StackPanel>
-            <Button Content="Обновить" Command="{Binding RefreshCommand}" Width="100" Margin="5"
-                    Style="{StaticResource RoundedButtonStyle}"/>
-            <Button Content="Экспорт в CSV" Command="{Binding ExportToCsvCommand}" Width="100" Margin="5"
-                    Style="{StaticResource RoundedButtonStyle}"/>
+            <Button Command="{Binding RefreshCommand}" Width="120" Margin="5"
+                    Style="{StaticResource RoundedButtonStyle}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="" VerticalAlignment="Center" Margin="0,0,5,0"/> <!-- Иконка обновления -->
+                    <TextBlock Text="Обновить" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Command="{Binding ExportToCsvCommand}" Width="140" Margin="5"
+                    Style="{StaticResource RoundedButtonStyle}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="" VerticalAlignment="Center" Margin="0,0,5,0"/> <!-- Иконка сохранения локально -->
+                    <TextBlock Text="Экспорт в CSV" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
         </StackPanel>
         <ProgressBar Grid.Row="2" Value="{Binding ProgressValue}" 
                      Visibility="{Binding IsProgressVisible, Converter={StaticResource BooleanToVisibilityConverter}}" 

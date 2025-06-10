@@ -7,33 +7,35 @@
       xmlns:local="clr-namespace:InventoryPC.Converters"
       mc:Ignorable="d" 
       d:DesignHeight="600" d:DesignWidth="1000"
-      Background="#1E1E1E">
+      >
     <Grid>
         <Border Background="#23272F" CornerRadius="16" Padding="40" Margin="120">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="340">
-                <TextBlock Text="Вход в систему" 
-                           Foreground="#FFF" 
-                           FontSize="24" FontWeight="Bold" 
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,12"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                    <Viewbox Width="32" Height="32" Margin="0,0,8,0">
+                        <Canvas Width="24" Height="24">
+                            <!-- Пример иконки "замок" (Lock) -->
+                            <Path Data="M6,10 L18,10 L18,20 L6,20 Z M8,10 V7 A4,4 0 0 1 16,7 V10" Stroke="#FFF" StrokeThickness="2" Fill="Transparent"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock Text="Вход в систему" 
+                               Foreground="#FFF" 
+                               FontSize="24" FontWeight="Bold" 
+                               VerticalAlignment="Center"/>
+                </StackPanel>
                 <TextBlock Text="Логин:" 
                            Foreground="#B0B0B0" 
                            FontSize="15" 
                            Margin="0,0,0,8"/>
-                <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}" 
-                         Height="36"
-                         FontSize="16"
-                         Padding="10,0"
-                         Background="#2E2E2E" 
-                         Foreground="#FFF" 
-                         BorderBrush="#3A3A3A"
-                         BorderThickness="1"
-                         Margin="0,0,0,8"/>
-                <TextBlock Text="Пароль:" 
-                           Foreground="#B0B0B0" 
-                           FontSize="15" 
-                           Margin="0,0,0,8"/>
-                <PasswordBox x:Name="PasswordBox"
+                <DockPanel Margin="0,0,0,8">
+                    <Viewbox Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Canvas Width="16" Height="16">
+                            <!-- Пример иконки "пользователь" (User) -->
+                            <Ellipse Width="12" Height="12" Canvas.Left="2" Canvas.Top="0" Stroke="#B0B0B0" StrokeThickness="1.5" Fill="Transparent"/>
+                            <Ellipse Width="8" Height="4" Canvas.Left="4" Canvas.Top="10" Stroke="#B0B0B0" StrokeThickness="1.5" Fill="Transparent"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBox Text="{Binding Login, UpdateSourceTrigger=PropertyChanged}" 
                              Height="36"
                              FontSize="16"
                              Padding="10,0"
@@ -41,8 +43,31 @@
                              Foreground="#FFF" 
                              BorderBrush="#3A3A3A"
                              BorderThickness="1"
-                             Margin="0,0,0,8"/>
-                <Button Content="Войти" 
+                             VerticalAlignment="Center"/>
+                </DockPanel>
+                <TextBlock Text="Пароль:" 
+                           Foreground="#B0B0B0" 
+                           FontSize="15" 
+                           Margin="0,0,0,8"/>
+                <DockPanel Margin="0,0,0,8">
+                    <Viewbox Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Canvas Width="16" Height="16">
+                            <!-- Пример иконки "замок" (Lock) -->
+                            <Rectangle Width="12" Height="7" Canvas.Left="2" Canvas.Top="7" Stroke="#B0B0B0" StrokeThickness="1.5" Fill="Transparent"/>
+                            <Path Data="M4,7 V5 A4,4 0 0 1 12,5 V7" Stroke="#B0B0B0" StrokeThickness="1.5" Fill="Transparent"/>
+                        </Canvas>
+                    </Viewbox>
+                    <PasswordBox x:Name="PasswordBox"
+                                 Height="36"
+                                 FontSize="16"
+                                 Padding="10,0"
+                                 Background="#2E2E2E" 
+                                 Foreground="#FFF" 
+                                 BorderBrush="#3A3A3A"
+                                 BorderThickness="1"
+                                 VerticalAlignment="Center"/>
+                </DockPanel>
+                <Button 
                         Command="{Binding LoginCommand}" 
                         CommandParameter="{Binding ElementName=PasswordBox}"
                         Height="38"
@@ -53,8 +78,20 @@
                         FontWeight="SemiBold"
                         IsDefault="True"
                         HorizontalAlignment="Stretch"
-                        Margin="0,8,0,0"/>
-                <Button Content="Войти без авторизации" 
+                        Margin="0,8,0,0">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Viewbox Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Canvas Width="16" Height="16">
+                                    <!-- Пример иконки "стрелка входа" (Login Arrow) -->
+                                    <Path Data="M2,8 L14,8 M10,4 L14,8 L10,12" Stroke="#FFF" StrokeThickness="2" Fill="Transparent"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Войти" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+                <Button 
                         Command="{Binding NavigateToFirstRunCommand}" 
                         Height="38"
                         FontSize="14"
@@ -62,7 +99,20 @@
                         Foreground="#B0B0B0"
                         BorderThickness="0"
                         HorizontalAlignment="Center"
-                        Margin="0,8,0,0"/>
+                        Margin="0,8,0,0" Width="340">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Viewbox Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center">
+                                <Canvas Width="16" Height="16">
+                                    <!-- Пример иконки "гость" (Guest) -->
+                                    <Ellipse Width="10" Height="10" Canvas.Left="3" Canvas.Top="1" Stroke="#B0B0B0" StrokeThickness="1.2" Fill="Transparent"/>
+                                    <Ellipse Width="8" Height="3" Canvas.Left="4" Canvas.Top="11" Stroke="#B0B0B0" StrokeThickness="1.2" Fill="Transparent"/>
+                                </Canvas>
+                            </Viewbox>
+                            <TextBlock Text="Войти без авторизации" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
             </StackPanel>
         </Border>
     </Grid>
