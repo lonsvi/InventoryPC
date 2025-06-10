@@ -74,11 +74,13 @@ namespace InventoryPC.ViewModels
         private async void FilterComputers()
         {
             var computers = await _dbService.GetComputersAsync();
+            var currentPcName = Environment.MachineName ?? "Unknown";
+            Log($"FilterComputers: Loaded {computers.Count} computers, User Role: {App.CurrentUser?.Role ?? "None"}");
+
             if (App.CurrentUser?.Role != "Admin")
             {
-                // Ограничиваем доступ для User/Guest: только свой ПК
-                var currentPcName = Environment.MachineName ?? "Unknown";
                 computers = computers.Where(c => c.Name == currentPcName).ToList();
+                Log($"FilterComputers: Filtered to current PC only: {computers.Count} computer(s)");
             }
 
             var filtered = computers.AsEnumerable();
@@ -111,6 +113,7 @@ namespace InventoryPC.ViewModels
             }
 
             Computers = new ObservableCollection<Computer>(filtered);
+            Log($"FilterComputers: Displayed {Computers.Count} computers after filtering");
         }
 
         public ObservableCollection<Computer>? Computers
@@ -162,19 +165,6 @@ namespace InventoryPC.ViewModels
             ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync, () => App.CurrentUser?.Role == "Admin");
             SelectedBranch = "Все филиалы";
             LoadDataAsync();
-            if (App.CurrentUser == null)
-            {
-                File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: No user authenticated, redirecting to LoginPage.\n");
-                NavigateToLoginPage();
-                return;
-            }
-
-            Computers = new ObservableCollection<Computer>();
-            RefreshCommand = new AsyncRelayCommand(RefreshAsync);
-            NavigateToDetailsCommand = new RelayCommand<Computer>(NavigateToDetails);
-            ExportToCsvCommand = new AsyncRelayCommand(ExportToCsvAsync);
-            SelectedBranch = "Все филиалы";
-            LoadDataAsync();
         }
 
         private void NavigateToLoginPage()
@@ -187,14 +177,32 @@ namespace InventoryPC.ViewModels
 
         private async void LoadDataAsync()
         {
-            var computers = await _dbService.GetComputersAsync();
-            if (App.CurrentUser?.Role != "Admin")
+            try
             {
-                // Ограничиваем доступ для User/Guest: только свой ПК
+                IsProgressVisible = true;
+                ProgressValue = 0;
+
+                var computers = await _dbService.GetComputersAsync();
                 var currentPcName = Environment.MachineName ?? "Unknown";
-                computers = computers.Where(c => c.Name == currentPcName).ToList();
+                Log($"Loaded {computers.Count} computers from database for PC: {currentPcName}, User Role: {App.CurrentUser?.Role ?? "None"}");
+
+                if (App.CurrentUser?.Role != "Admin")
+                {
+                    computers = computers.Where(c => c.Name == currentPcName).ToList();
+                    Log($"Filtered to current PC only: {computers.Count} computer(s)");
+                }
+
+                Computers = new ObservableCollection<Computer>(computers);
+                FilterComputers();
             }
-            Computers = new ObservableCollection<Computer>(computers);
+            catch (Exception ex)
+            {
+                Log($"Error in LoadDataAsync: {ex.Message}\n{ex.StackTrace}");
+            }
+            finally
+            {
+                IsProgressVisible = false;
+            }
         }
 
         private async Task RefreshAsync()
@@ -208,10 +216,8 @@ namespace InventoryPC.ViewModels
                 var computer = await _dataService.CollectDataAsync(progress);
                 computer.User = Environment.UserName;
 
-                // Сохраняем Office из существующей записи
                 var currentPcName = Environment.MachineName ?? "Unknown";
-                var existingComputer = (await _dbService.GetComputersAsync())
-                    .FirstOrDefault(c => c.Name == currentPcName);
+                var existingComputer = (await _dbService.GetComputersAsync()).FirstOrDefault(c => c.Name == currentPcName);
                 if (existingComputer != null && !string.IsNullOrWhiteSpace(existingComputer.Office))
                 {
                     computer.Office = existingComputer.Office;
@@ -219,24 +225,23 @@ namespace InventoryPC.ViewModels
 
                 await _dbService.SaveComputerAsync(computer);
 
-                // Фильтруем данные по роли пользователя
                 var computers = await _dbService.GetComputersAsync();
+                Log($"Refreshed {computers.Count} computers from database for PC: {currentPcName}, User Role: {App.CurrentUser?.Role ?? "None"}");
+
                 if (App.CurrentUser?.Role != "Admin")
                 {
                     computers = computers.Where(c => c.Name == currentPcName).ToList();
+                    Log($"Filtered to current PC only: {computers.Count} computer(s)");
                 }
-                Computers = new ObservableCollection<Computer>(computers);
 
-                // Применяем текущие фильтры
+                Computers = new ObservableCollection<Computer>(computers);
                 FilterComputers();
 
-                File.AppendAllText(@"C:\Inventory\log.txt",
-                    $"{DateTime.Now}: Refreshed data for PC: {currentPcName}, Role: {App.CurrentUser?.Role ?? "None"}, Displayed {Computers.Count} computers\n");
+                Log($"Refreshed data for PC: {currentPcName}, Role: {App.CurrentUser?.Role ?? "None"}, Displayed {Computers.Count} computers");
             }
             catch (Exception ex)
             {
-                File.AppendAllText(@"C:\Inventory\log.txt",
-                    $"{DateTime.Now}: Error in RefreshAsync: {ex.Message}\n{ex.StackTrace}\n");
+                Log($"Error in RefreshAsync: {ex.Message}\n{ex.StackTrace}");
             }
             finally
             {
@@ -271,6 +276,11 @@ namespace InventoryPC.ViewModels
                 detailsViewModel.SetComputer(computer);
                 mainWindow.MainFrame.Navigate(detailsPage);
             }
+        }
+
+        private void Log(string message)
+        {
+            File.AppendAllText(@"C:\Inventory\log.txt", $"{DateTime.Now}: {message}\n");
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

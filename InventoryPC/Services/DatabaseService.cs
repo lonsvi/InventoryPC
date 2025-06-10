@@ -36,7 +36,7 @@ namespace InventoryPC.Services
                     CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
                     -- Добавляем или обновляем админа (пароль: qw1234)
                     INSERT OR REPLACE INTO Users (Login, PasswordHash, Role) 
-                    VALUES ('admin', 'c9e7c568fe02d752e050b57b386c3b5b2ae1b0a375ed8b9e2b7a81ce3e0ab', 'Admin');
+                    VALUES ('admin', 'a168260c7a49a598ca9e6fbd69d19041bfbbcca938ce082b02ff812c98cebd3a', 'Admin');
 
                     -- Таблица Computers
                     CREATE TABLE IF NOT EXISTS Computers (

@@ -46,10 +46,12 @@ namespace InventoryPC.ViewModels
             string testHash = _authService.TestHash(passwordBox.Password);
             Log($"Test hash for password {passwordBox.Password}: {testHash}");
 
+            Log($"Login attempt: Login: {Login}, Password: {passwordBox.Password}");
             var user = await _authService.AuthenticateAsync(Login, passwordBox.Password);
             if (user != null)
             {
                 App.CurrentUser = user;
+                Log($"Login successful: Login: {Login}, Role: {user.Role}");
                 NavigateToMainPage();
             }
             else
