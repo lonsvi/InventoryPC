@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using InventoryPC.Models;
 using System.Collections.Generic;
+using System.Text.Json; // Добавлено для JSON
 
 namespace InventoryPC.Services
 {
@@ -11,6 +12,8 @@ namespace InventoryPC.Services
     {
         private readonly string _connectionString = @"Data Source=\\192.168.2.226\admin-soft\! тесты !\inventory.db";
         private readonly string _logPath = @"C:\Inventory\log.txt";
+
+       
 
         public DatabaseService()
         {
@@ -24,60 +27,86 @@ namespace InventoryPC.Services
             {
                 using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
+
+                // Создаём таблицы
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                    -- Таблица Users
-                    CREATE TABLE IF NOT EXISTS Users (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Login TEXT NOT NULL UNIQUE,
-                        PasswordHash TEXT NOT NULL,
-                        Role TEXT NOT NULL
-                    );
-                    CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
-                    -- Добавляем или обновляем админа (пароль: qw1234)
-                    INSERT OR REPLACE INTO Users (Login, PasswordHash, Role) 
-                    VALUES ('admin', 'a168260c7a49a598ca9e6fbd69d19041bfbbcca938ce082b02ff812c98cebd3a', 'Admin');
+            -- Таблица Users
+            CREATE TABLE IF NOT EXISTS Users (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Login TEXT NOT NULL UNIQUE,
+                PasswordHash TEXT NOT NULL,
+                Role TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_users_login ON Users(Login);
+            -- Добавляем или обновляем админа (пароль: qw1234)
+            INSERT OR REPLACE INTO Users (Login, PasswordHash, Role) 
+            VALUES ('admin', 'a168260c7a49a598ca9e6fbd69d19041bfbbcca938ce082b02ff812c98cebd3a', 'Admin');
 
-                    -- Таблица Computers
-                    CREATE TABLE IF NOT EXISTS Computers (
-                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        Name TEXT,
-                        User TEXT,
-                        Branch TEXT,
-                        Office TEXT,
-                        WindowsVersion TEXT,
-                        ActivationStatus TEXT,
-                        LicenseExpiry TEXT,
-                        IPAddress TEXT,
-                        MACAddress TEXT,
-                        Processor TEXT,
-                        Monitors TEXT,
-                        Mouse TEXT,
-                        Keyboard TEXT,
-                        OfficeStatus TEXT,
-                        OfficeLicenseName TEXT,
-                        Memory TEXT,
-                        SubnetMask TEXT,
-                        Gateway TEXT,
-                        DNSServers TEXT,
-                        LastChecked TEXT,
-                        Printers TEXT,
-                        AntivirusName TEXT,
-                        AntivirusVersion TEXT,
-                        AntivirusLicenseExpiry TEXT,
-                        Motherboard TEXT,
-                        BIOSVersion TEXT,
-                        VideoCard TEXT,
-                        VideoCardMemory TEXT,
-                        VideoCardDriver TEXT,
-                        Disks TEXT,
-                        SSID TEXT,
-                        InventoryNumber TEXT
-                    );
-                    CREATE UNIQUE INDEX IF NOT EXISTS idx_computers_name ON Computers(Name);
-                ";
+            -- Таблица Computers
+            CREATE TABLE IF NOT EXISTS Computers (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT,
+                User TEXT,
+                Branch TEXT,
+                Office TEXT,
+                WindowsVersion TEXT,
+                ActivationStatus TEXT,
+                LicenseExpiry TEXT,
+                IPAddress TEXT,
+                MACAddress TEXT,
+                Processor TEXT,
+                Monitors TEXT,
+                Mouse TEXT,
+                Keyboard TEXT,
+                OfficeStatus TEXT,
+                OfficeLicenseName TEXT,
+                Memory TEXT,
+                SubnetMask TEXT,
+                Gateway TEXT,
+                DNSServers TEXT,
+                LastChecked TEXT,
+                Printers TEXT,
+                AntivirusName TEXT,
+                AntivirusVersion TEXT,
+                AntivirusLicenseExpiry TEXT,
+                Motherboard TEXT,
+                BIOSVersion TEXT,
+                VideoCard TEXT,
+                VideoCardMemory TEXT,
+                VideoCardDriver TEXT,
+                Disks TEXT,
+                SSID TEXT,
+                InventoryNumber TEXT,
+                InstalledApps TEXT DEFAULT '[]'
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_computers_name ON Computers(Name);
+        ";
                 command.ExecuteNonQuery();
                 Log("Database initialized: Created Users and Computers tables, inserted/updated admin with password qw1234.");
+
+                // Проверяем наличие столбца InstalledApps
+                command.CommandText = "PRAGMA table_info(Computers);";
+                using var reader = command.ExecuteReader();
+                bool hasInstalledApps = false;
+                while (reader.Read())
+                {
+                    string columnName = reader.GetString(1);
+                    if (columnName.Equals("InstalledApps", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasInstalledApps = true;
+                        break;
+                    }
+                }
+                reader.Close();
+
+                // Добавляем столбец InstalledApps, если он отсутствует
+                if (!hasInstalledApps)
+                {
+                    command.CommandText = "ALTER TABLE Computers ADD COLUMN InstalledApps TEXT DEFAULT '[]';";
+                    command.ExecuteNonQuery();
+                    Log("Added InstalledApps column to Computers table.");
+                }
             }
             catch (Exception ex)
             {
@@ -93,6 +122,9 @@ namespace InventoryPC.Services
                 using var connection = new SqliteConnection(_connectionString);
                 await connection.OpenAsync();
 
+                // Сериализуем InstalledApps в JSON
+                string jsonApps = JsonSerializer.Serialize(computer.InstalledApps ?? new List<AppInfo>());
+
                 // Проверяем, существует ли запись с таким Name
                 var checkCommand = connection.CreateCommand();
                 checkCommand.CommandText = "SELECT Id FROM Computers WHERE Name = $name";
@@ -101,45 +133,46 @@ namespace InventoryPC.Services
 
                 if (existingId != null)
                 {
-                    // Обновляем существующую запись
                     var updateCommand = connection.CreateCommand();
                     updateCommand.CommandText = @"
-                        UPDATE Computers SET
-                            User = $user,
-                            Branch = $branch,
-                            Office = $office,
-                            WindowsVersion = $windowsVersion,
-                            ActivationStatus = $activationStatus,
-                            LicenseExpiry = $licenseExpiry,
-                            IPAddress = $ipAddress,
-                            MACAddress = $macAddress,
-                            Processor = $processor,
-                            Monitors = $monitors,
-                            Mouse = $mouse,
-                            Keyboard = $keyboard,
-                            OfficeStatus = $officeStatus,
-                            OfficeLicenseName = $officeLicenseName,
-                            Memory = $memory,
-                            SubnetMask = $subnetMask,
-                            Gateway = $gateway,
-                            DNSServers = $dnsServers,
-                            LastChecked = $lastChecked,
-                            Printers = $printers,
-                            AntivirusName = $antivirusName,
-                            AntivirusVersion = $antivirusVersion,
-                            AntivirusLicenseExpiry = $antivirusLicenseExpiry,
-                            Motherboard = $motherboard,
-                            BIOSVersion = $biosVersion,
-                            VideoCard = $videoCard,
-                            VideoCardMemory = $videoCardMemory,
-                            VideoCardDriver = $videoCardDriver,
-                            Disks = $disks,
-                            SSID = $ssid,
-                            InventoryNumber = $inventoryNumber
-                        WHERE Id = $id";
+        UPDATE Computers SET
+            User = $user,
+            Branch = $branch,
+            Office = $office,
+            WindowsVersion = $windowsVersion,
+            ActivationStatus = $activationStatus,
+            LicenseExpiry = $licenseExpiry,
+            IPAddress = $ipAddress,
+            MACAddress = $macAddress,
+            Processor = $processor,
+            Monitors = $monitors,
+            Mouse = $mouse,
+            Keyboard = $keyboard,
+            OfficeStatus = $officeStatus,
+            OfficeLicenseName = $officeLicenseName,
+            Memory = $memory,
+            SubnetMask = $subnetMask,
+            Gateway = $gateway,
+            DNSServers = $dnsServers,
+            LastChecked = $lastChecked,
+            Printers = $printers,
+            AntivirusName = $antivirusName,
+            AntivirusVersion = $antivirusVersion,
+            AntivirusLicenseExpiry = $antivirusLicenseExpiry,
+            Motherboard = $motherboard,
+            BIOSVersion = $biosVersion,
+            VideoCard = $videoCard,
+            VideoCardMemory = $videoCardMemory,
+            VideoCardDriver = $videoCardDriver,
+            Disks = $disks,
+            SSID = $ssid,
+            InventoryNumber = $inventoryNumber,
+            InstalledApps = $installedApps
+        WHERE Id = $id";
 
+                   
 
-                    updateCommand.Parameters.AddWithValue("$id", existingId);
+                updateCommand.Parameters.AddWithValue("$id", existingId);
                     updateCommand.Parameters.AddWithValue("$user", computer.User ?? (object)DBNull.Value);
                     updateCommand.Parameters.AddWithValue("$branch", computer.Branch ?? (object)DBNull.Value);
                     updateCommand.Parameters.AddWithValue("$office", computer.Office ?? (object)DBNull.Value);
@@ -171,9 +204,10 @@ namespace InventoryPC.Services
                     updateCommand.Parameters.AddWithValue("$disks", computer.Disks ?? (object)DBNull.Value);
                     updateCommand.Parameters.AddWithValue("$ssid", computer.SSID ?? (object)DBNull.Value);
                     updateCommand.Parameters.AddWithValue("$inventoryNumber", computer.InventoryNumber ?? (object)DBNull.Value);
+                    updateCommand.Parameters.AddWithValue("$installedApps", jsonApps);
 
                     await updateCommand.ExecuteNonQueryAsync();
-                    Log($"Updated computer with Id={existingId}, Name={computer.Name}");
+                    Log($"Updated computer: Id={existingId}, Name={computer.Name}, AppsCount={computer.InstalledApps?.Count ?? 0}");
                 }
                 else
                 {
@@ -185,13 +219,13 @@ namespace InventoryPC.Services
                             IPAddress, MACAddress, Processor, Monitors, Mouse, Keyboard, OfficeStatus, 
                             OfficeLicenseName, Memory, SubnetMask, Gateway, DNSServers, LastChecked, Printers,
                             AntivirusName, AntivirusVersion, AntivirusLicenseExpiry, Motherboard, BIOSVersion,
-                            VideoCard, VideoCardMemory, VideoCardDriver, Disks, SSID, InventoryNumber
+                            VideoCard, VideoCardMemory, VideoCardDriver, Disks, SSID, InventoryNumber, InstalledApps
                         ) VALUES (
                             $name, $user, $branch, $office, $windowsVersion, $activationStatus, $licenseExpiry, 
                             $ipAddress, $macAddress, $processor, $monitors, $mouse, $keyboard, $officeStatus, 
                             $officeLicenseName, $memory, $subnetMask, $gateway, $dnsServers, $lastChecked, $printers,
                             $antivirusName, $antivirusVersion, $antivirusLicenseExpiry, $motherboard, $biosVersion,
-                            $videoCard, $videoCardMemory, $videoCardDriver, $disks, $ssid, $inventoryNumber
+                            $videoCard, $videoCardMemory, $videoCardDriver, $disks, $ssid, $inventoryNumber, $installedApps
                         )";
 
                     insertCommand.Parameters.AddWithValue("$name", computer.Name ?? (object)DBNull.Value);
@@ -226,9 +260,10 @@ namespace InventoryPC.Services
                     insertCommand.Parameters.AddWithValue("$disks", computer.Disks ?? (object)DBNull.Value);
                     insertCommand.Parameters.AddWithValue("$ssid", computer.SSID ?? (object)DBNull.Value);
                     insertCommand.Parameters.AddWithValue("$inventoryNumber", computer.InventoryNumber ?? (object)DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("$installedApps", jsonApps);
 
                     await insertCommand.ExecuteNonQueryAsync();
-                    Log($"Inserted new computer: Name={computer.Name}");
+                    Log($"Inserted new computer: Name={computer.Name}, AppsCount={computer.InstalledApps?.Count ?? 0}");
                 }
             }
             catch (Exception ex)
@@ -248,7 +283,7 @@ namespace InventoryPC.Services
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                computers.Add(new Computer
+                var computer = new Computer
                 {
                     Id = reader.GetInt32(0),
                     Name = reader.IsDBNull(1) ? null : reader.GetString(1),
@@ -282,11 +317,19 @@ namespace InventoryPC.Services
                     VideoCardDriver = reader.IsDBNull(29) ? null : reader.GetString(29),
                     Disks = reader.IsDBNull(30) ? null : reader.GetString(30),
                     SSID = reader.IsDBNull(31) ? null : reader.GetString(31),
-                    InventoryNumber = reader.IsDBNull(32) ? null : reader.GetString(32)
-                });
+                    InventoryNumber = reader.IsDBNull(32) ? null : reader.GetString(32),
+                };
+
+                // Десериализуем InstalledApps
+                string jsonApps = reader.IsDBNull(33) ? "[]" : reader.GetString(33);
+                computer.InstalledApps = JsonSerializer.Deserialize<List<AppInfo>>(jsonApps) ?? new List<AppInfo>();
+
+                computers.Add(computer);
             }
+            Log($"Retrieved {computers.Count} computers");
             return computers;
         }
+
         public async Task<User?> GetUserByLoginAsync(string login)
         {
             try

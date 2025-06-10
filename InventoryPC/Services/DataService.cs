@@ -1,11 +1,13 @@
-﻿using System;
+﻿using InventoryPC.Models;
+using Microsoft.Win32;
+using System;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using InventoryPC.Models;
-using System.Globalization;
+using System.Linq; // Добавлено для LINQ
 
 namespace InventoryPC.Services
 {
@@ -142,15 +144,16 @@ namespace InventoryPC.Services
             string invOutput = await RunCommandAsync("wmic csproduct get IdentifyingNumber");
             Log("wmic csproduct output: " + Truncate(invOutput, 500));
             computer.InventoryNumber = ParseInventoryNumber(invOutput);
-            Log($"Parsed InventoryNumber: {computer.InventoryNumber}");
+            computer.InstalledApps = await ParseInstalledAppsAsync(); // Добавляем парсинг приложений
+            Log($"Parsed {computer.InstalledApps.Count} installed apps");
 
-            // Шаг 11: Принтеры (97%)
+            // Шаг 11: Принтеры
             progress.Report(97);
             string printerOutput = await RunCommandAsync("wmic printer get Name,PortName");
             Log("wmic printer output: " + Truncate(printerOutput, 1000));
             computer.Printers = ParsePrinters(printerOutput);
 
-            // Завершение (100%)
+            // Завершение
             progress.Report(100);
             computer.LastChecked = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             Log($"Final Office value: {computer.Office}");
@@ -604,7 +607,76 @@ namespace InventoryPC.Services
             Log("No printers parsed");
             return "None";
         }
+        private async Task<List<AppInfo>> ParseInstalledAppsAsync()
+        {
+            var apps = new List<AppInfo>();
+            try
+            {
+                Log("Starting installed apps parsing...");
+                var registryPaths = new[]
+                {
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                    @"SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+                };
 
+                foreach (var path in registryPaths)
+                {
+                    using (var key = Registry.LocalMachine.OpenSubKey(path))
+                    {
+                        if (key == null) continue;
+
+                        foreach (var subKeyName in key.GetSubKeyNames())
+                        {
+                            using (var subKey = key.OpenSubKey(subKeyName))
+                            {
+                                if (subKey == null) continue;
+
+                                string name = subKey.GetValue("DisplayName")?.ToString()?.Trim();
+                                if (string.IsNullOrEmpty(name)) continue;
+
+                                string installDate = subKey.GetValue("InstallDate")?.ToString()?.Trim();
+                                if (!string.IsNullOrEmpty(installDate) && installDate.Length == 8)
+                                {
+                                    try
+                                    {
+                                        installDate = $"{installDate.Substring(0, 4)}-{installDate.Substring(4, 2)}-{installDate.Substring(6, 2)}";
+                                    }
+                                    catch
+                                    {
+                                        installDate = "Unknown";
+                                    }
+                                }
+                                else
+                                {
+                                    installDate = "Unknown";
+                                }
+
+                                apps.Add(new AppInfo
+                                {
+                                    Name = name,
+                                    InstallDate = installDate
+                                });
+                            }
+                        }
+                    }
+                }
+
+                apps = apps
+                    .Where(a => !string.IsNullOrEmpty(a.Name))
+                    .GroupBy(a => a.Name)
+                    .Select(g => g.First())
+                    .OrderBy(a => a.Name)
+                    .ToList();
+
+                Log($"Parsed {apps.Count} unique apps");
+                return apps;
+            }
+            catch (Exception ex)
+            {
+                Log($"Error parsing installed apps: {ex.Message}\n{ex.StackTrace}");
+                return apps;
+            }
+        }
         private void Log(string message)
         {
             try
