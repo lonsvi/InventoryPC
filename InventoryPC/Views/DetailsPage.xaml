@@ -25,14 +25,14 @@
             <Button Command="{Binding NavigateBackCommand}" Width="120" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}" FontSize="14" Padding="10">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="" FontFamily="Segoe Fluent Icons" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Назад" FontFamily="Segoe UI" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
             <Button Command="{Binding SaveCommand}" Width="120" Margin="5"
                     Style="{StaticResource RoundedButtonStyle}" FontSize="14" Padding="10">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="" FontFamily="Segoe Fluent Icons" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets" Margin="0,0,5,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Сохранить" FontFamily="Segoe UI" VerticalAlignment="Center"/>
                 </StackPanel>
             </Button>
@@ -47,21 +47,21 @@
                 <WrapPanel>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE770;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Имя ПК" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Name, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Пользователь" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.User, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7EF;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Windows" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.WindowsVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
@@ -77,7 +77,7 @@
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7F8;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="ОЗУ" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Memory, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
@@ -88,28 +88,28 @@
                 <WrapPanel>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Филиал" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Computer.Branch, UpdateSourceTrigger=PropertyChanged}" Width="160" Background="#3E3E3E" Foreground="White" BorderBrush="#4F8EF7" BorderThickness="1" Padding="5"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Кабинет" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Computer.Office, UpdateSourceTrigger=PropertyChanged}" Width="160" Background="#3E3E3E" Foreground="White" BorderBrush="#4F8EF7" BorderThickness="1" Padding="5"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Инв. номер" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Computer.InventoryNumber, UpdateSourceTrigger=PropertyChanged}" Width="160" Background="#3E3E3E" Foreground="White" BorderBrush="#4F8EF7" BorderThickness="1" Padding="5"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE823;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Последняя проверка" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.LastChecked, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
@@ -120,42 +120,42 @@
                 <WrapPanel>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE839;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="IP-адрес" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.IPAddress, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE8D4;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="MAC-адрес" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.MACAddress, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE8D5;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Маска подсети" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.SubnetMask, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE778;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Шлюз" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Gateway, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="DNS-серверы" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.DNSServers, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE701;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="SSID" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.SSID, FallbackValue=Нет}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
@@ -166,28 +166,28 @@
                 <WrapPanel>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE950;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Процессор" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Processor, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7FC;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Материнская плата" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Motherboard, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE957;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="BIOS" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.BIOSVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7F8;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Видеокарта" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.VideoCard, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                             <TextBlock Text="{Binding Computer.VideoCardMemory, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
@@ -195,35 +195,35 @@
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7F1;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Диски" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Disks, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Мониторы" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Monitors, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE962;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Мышь" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Mouse, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE765;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Клавиатура" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Keyboard, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE749;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Принтеры" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.Printers, FallbackValue=Нет}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                         </StackPanel>
@@ -234,7 +234,7 @@
                 <WrapPanel>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Microsoft Office" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.OfficeLicenseName, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
@@ -249,7 +249,7 @@
                     </Border>
                     <Border Style="{StaticResource TileStyle}">
                         <StackPanel>
-                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
+                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="24" Margin="0,0,0,5"/>
                             <TextBlock Text="Антивирус" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                             <TextBlock Text="{Binding Computer.AntivirusName, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
                             <TextBlock Text="{Binding Computer.AntivirusVersion, FallbackValue=Неизвестно}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
@@ -310,7 +310,7 @@
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Margin="5">
-                                            <TextBlock Text="" FontFamily="Segoe Fluent Icons" Foreground="#4F8EF7" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="&#xE8B8;" FontFamily="Segoe MDL2 Assets" Foreground="#4F8EF7" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                             <StackPanel>
                                                 <TextBlock Text="{Binding Name}" Foreground="White" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                                 <TextBlock Text="{Binding InstallDate, StringFormat='Установлено: {0}', FallbackValue='Установлено: Неизвестно'}" Foreground="#CCCCCC" FontSize="12" TextWrapping="Wrap"/>
@@ -325,4 +325,4 @@
             </StackPanel>
         </ScrollViewer>
     </Grid>
-</Page>
+</Page>     

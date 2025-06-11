@@ -3,8 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="InventoryPC" Height="600" Width="1000"
         WindowState="Maximized"
-        Background="#1E1E1E">
+        Background="#1E1E1E" Icon="/752f6bf9-883e-4ab4-ae87-6011e4ce7d17.ico">
     <Grid>
-        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="7*"/>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="991*"/>
+        </Grid.ColumnDefinitions>
+        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" Grid.ColumnSpan="5"/>
     </Grid>
 </Window>
