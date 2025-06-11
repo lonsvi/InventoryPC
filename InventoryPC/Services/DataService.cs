@@ -529,15 +529,36 @@ namespace InventoryPC.Services
         private string ParseVideoCardMemory(string output)
         {
             Log($"Raw video card memory output: {Truncate(output, 1000)}");
-            Regex regex = new Regex(@"AdapterRAM\s+\d+\s+\d+\s+(\d+)", RegexOptions.Multiline);
-            var match = regex.Match(output);
-            long ram = 0;
-            if (match.Success && long.TryParse(match.Groups[1].Value.Trim(), out ram))
+
+            // Попробуем найти строку AdapterRAM и взять число после неё
+            // Пример: AdapterRAM 4293918720
+            Regex regex = new Regex(@"AdapterRAM\s+(\d+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            var matches = regex.Matches(output);
+
+            if (matches.Count > 0)
             {
-                string result = $"{ram / 1024 / 1024} MB";
-                Log($"Parsed video card memory: {result}");
+                // Если несколько видеокарт, берём первую с ненуловым значением
+                foreach (Match match in matches)
+                {
+                    if (long.TryParse(match.Groups[1].Value.Trim(), out long ram) && ram > 0)
+                    {
+                        string result = $"{ram / 1024 / 1024} MB";
+                        Log($"Parsed video card memory: {result}");
+                        return result;
+                    }
+                }
+            }
+
+            // Альтернативный способ: ищем числа больше 128*1024*1024 (128 МБ) после AdapterRAM
+            regex = new Regex(@"AdapterRAM\s*[:=]?\s*(\d{8,})", RegexOptions.IgnoreCase);
+            var altMatch = regex.Match(output);
+            if (altMatch.Success && long.TryParse(altMatch.Groups[1].Value.Trim(), out long altRam) && altRam > 0)
+            {
+                string result = $"{altRam / 1024 / 1024} MB";
+                Log($"Parsed video card memory (alt): {result}");
                 return result;
             }
+
             Log("No video card memory parsed");
             return "Unknown";
         }
@@ -560,19 +581,72 @@ namespace InventoryPC.Services
         private string ParseDisks(string output)
         {
             Log($"Raw disk output: {Truncate(output, 1000)}");
-            Regex regex = new Regex(@"InterfaceType\s+(\w+)\s+Model\s+(.+?)\s+SerialNumber\s+(\w+)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            var matches = regex.Matches(output);
-            if (matches.Count > 0)
+            var lines = output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Найдём индексы столбцов по заголовку
+            int modelIdx = -1, interfaceIdx = -1, serialIdx = -1;
+            if (lines.Length > 0)
             {
-                var disks = matches.Cast<Match>()
-                    .Select(m => $"{m.Groups[2].Value.Trim()} ({m.Groups[1].Value.Trim()}, S/N: {m.Groups[3].Value.Trim()})")
-                    .Where(d => !string.IsNullOrEmpty(d));
-                string result = string.Join(", ", disks);
-                Log($"Parsed disks: {result}");
-                return string.IsNullOrEmpty(result) ? "Unknown" : result;
+                var header = lines[0];
+                modelIdx = header.IndexOf("Model", StringComparison.OrdinalIgnoreCase);
+                interfaceIdx = header.IndexOf("InterfaceType", StringComparison.OrdinalIgnoreCase);
+                serialIdx = header.IndexOf("SerialNumber", StringComparison.OrdinalIgnoreCase);
             }
-            Log("No disks parsed");
-            return "Unknown";
+
+            var disks = new List<string>();
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                // Если строка короче, чем нужно для всех индексов, пропускаем
+                if (modelIdx < 0 || interfaceIdx < 0 || serialIdx < 0 || line.Length < serialIdx)
+                    continue;
+
+                try
+                {
+                    string model = line.Length > modelIdx && interfaceIdx > modelIdx
+                        ? line.Substring(modelIdx, interfaceIdx - modelIdx).Trim()
+                        : "";
+                    string iface = line.Length > interfaceIdx && serialIdx > interfaceIdx
+                        ? line.Substring(interfaceIdx, serialIdx - interfaceIdx).Trim()
+                        : "";
+                    string serial = line.Length > serialIdx
+                        ? line.Substring(serialIdx).Trim()
+                        : "";
+
+                    // Иногда wmic возвращает пустые строки, фильтруем
+                    if (!string.IsNullOrWhiteSpace(model))
+                        disks.Add($"{model} ({iface}, S/N: {serial})");
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error parsing disk line: {line} | {ex.Message}");
+                }
+            }
+
+            // Если не удалось корректно распарсить, пробуем альтернативный способ (через разделитель пробелами)
+            if (disks.Count == 0 && lines.Length > 1)
+            {
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    var line = lines[i].Trim();
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var parts = Regex.Split(line, @"\s{2,}"); // разделяем по 2+ пробелам
+                    if (parts.Length >= 3)
+                    {
+                        string model = parts[0].Trim();
+                        string iface = parts[1].Trim();
+                        string serial = parts[2].Trim();
+                        if (!string.IsNullOrWhiteSpace(model))
+                            disks.Add($"{model} ({iface}, S/N: {serial})");
+                    }
+                }
+            }
+
+            string result = disks.Count > 0 ? string.Join(", ", disks) : "Unknown";
+            Log($"Parsed disks: {result}");
+            return result;
         }
 
         private string ParseInventoryNumber(string output)
@@ -587,25 +661,43 @@ namespace InventoryPC.Services
         private string ParsePrinters(string output)
         {
             Log($"Raw printer output: {Truncate(output, 1000)}");
-            Regex regex = new Regex(@"Name\s+(.+?)\s+PortName\s+(.+?)(?:\r\n|$)", RegexOptions.Multiline | RegexOptions.IgnoreCase);
-            var matches = regex.Matches(output);
-            if (matches.Count > 0)
+
+            // Парсим таблицу WMIC: первая строка - заголовки, далее - строки с данными
+            var lines = output.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length < 2)
             {
-                var printers = matches.Cast<Match>()
-                    .Select(m =>
-                    {
-                        string name = m.Groups[1].Value.Trim();
-                        string port = m.Groups[2].Value.Trim();
-                        string ip = port.StartsWith("IP_") ? port.Substring(3) : "Local";
-                        return $"{name} (IP: {ip}, Status: Unknown, Inventory: Not Assigned)";
-                    })
-                    .Where(p => !string.IsNullOrEmpty(p));
-                string result = string.Join("; ", printers);
-                Log($"Parsed printers: {result}");
-                return string.IsNullOrEmpty(result) ? "None" : result;
+                Log("No printers parsed (not enough lines)");
+                return "None";
             }
-            Log("No printers parsed");
-            return "None";
+
+            // Определяем индексы столбцов по заголовку
+            int nameIdx = lines[0].IndexOf("Name", StringComparison.OrdinalIgnoreCase);
+            int portIdx = lines[0].IndexOf("PortName", StringComparison.OrdinalIgnoreCase);
+
+            if (nameIdx < 0 || portIdx < 0)
+            {
+                Log("No printers parsed (header not found)");
+                return "None";
+            }
+
+            var printers = new List<string>();
+            for (int i = 1; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (line.Length < portIdx) continue;
+
+                string name = line.Substring(nameIdx, portIdx - nameIdx).Trim();
+                string port = line.Substring(portIdx).Trim();
+
+                if (string.IsNullOrWhiteSpace(name)) continue;
+
+                string ip = port.StartsWith("IP_", StringComparison.OrdinalIgnoreCase) ? port.Substring(3) : "Local";
+                printers.Add($"{name} (IP: {ip}, Status: Unknown, Inventory: Not Assigned)");
+            }
+
+            string result = printers.Count > 0 ? string.Join("; ", printers) : "None";
+            Log($"Parsed printers: {result}");
+            return result;
         }
         private async Task<List<AppInfo>> ParseInstalledAppsAsync()
         {
